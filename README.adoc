@@ -1,0 +1,39 @@
+= Z Wayland
+
+Wayland clients under Z11.
+
+== Build
+
+Build & install link:https://github.com/gray-armor/z11[Z11] first
+
+Build & install ZWayland
+
+[source, console]
+....
+$ meson build
+$ ninja -C build install
+....
+
+== Run
+
+run z11 compositor first,
+
+[source, console]
+....
+$ XDG_RUNTIME_DIR=~/.xdg_z11 zazen -no-hmd
+....
+
+in another shell
+
+[source, console]
+....
+$ Z11_XDG_RUNTIME_DIR=~/.xdg_z11 XDG_RUNTIME_DIR=~/.xdg zwayland
+....
+
+in another shell
+
+[source, console]
+....
+$ XDG_RUNTIME_DIR=~/.xdg <some wayland client>
+$ XDG_RUNTIME_DIR=~/.xdg weston-flower
+....
