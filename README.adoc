@@ -20,14 +20,14 @@ run z11 compositor first,
 
 [source, console]
 ....
-$ XDG_RUNTIME_DIR=~/.xdg_z11 zazen -no-hmd
+$ XDG_RUNTIME_DIR=~/.xdg zazen -no-hmd
 ....
 
 in another shell
 
 [source, console]
 ....
-$ Z11_XDG_RUNTIME_DIR=~/.xdg_z11 XDG_RUNTIME_DIR=~/.xdg zwayland
+$ XDG_RUNTIME_DIR=~/.xdg zwayland
 ....
 
 in another shell
