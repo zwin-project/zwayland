@@ -1,3 +1,5 @@
+#include "zwc_display.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <wayland-client.h>
@@ -5,34 +7,9 @@
 
 #include "zwc_global.h"
 
-struct zwc_display {
-  struct wl_display* wl_display;
-  struct zwc_global* global;
-  struct z11_virtual_object* virtual_object;
-};
-
-static void callback_done(void* data, struct wl_callback* callback, uint32_t callback_data);
-
-static const struct wl_callback_listener zwc_callback_listener = {
-    .done = callback_done,
-};
-
-static void callback_done(void* data, struct wl_callback* callback, uint32_t callback_data)
-{
-  (void)callback_data;
-  struct zwc_display* zwc_display = data;
-  struct wl_callback* cb;
-  wl_callback_destroy(callback);
-  cb = z11_virtual_object_frame(zwc_display->virtual_object);
-  wl_callback_add_listener(cb, &zwc_callback_listener, zwc_display);
-  z11_virtual_object_commit(zwc_display->virtual_object);
-}
-
 struct zwc_display* zwc_display_create(const char* name)
 {
   struct zwc_display* zwc_display;
-  struct z11_virtual_object* virtual_object;
-  struct wl_callback* cb;
 
   if (name == NULL) name = "z11-0";
 
@@ -49,15 +26,6 @@ struct zwc_display* zwc_display_create(const char* name)
   if (zwc_display->global == NULL) {
     goto out_wl_display;
   }
-
-  virtual_object = z11_compositor_create_virtual_object(zwc_display->global->compositor);
-
-  zwc_display->virtual_object = virtual_object;
-
-  cb = z11_virtual_object_frame(virtual_object);
-  wl_callback_add_listener(cb, &zwc_callback_listener, zwc_display);
-  z11_virtual_object_commit(virtual_object);
-  wl_display_flush(zwc_display->wl_display);
 
   return zwc_display;
 

@@ -1,0 +1,4 @@
+#ifndef ZWC_VIRTUAL_OBJECT_H
+#define ZWC_VIRTUAL_OBJECT_H
+
+#endif  //  ZWC_VIRTUAL_OBJECT_H

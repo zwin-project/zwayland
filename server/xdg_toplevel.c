@@ -3,17 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <wayland-server.h>
+#include <zwc.h>
 
+#include "callback.h"
+#include "surface.h"
 #include "util.h"
 #include "xdg-shell-server-protocol.h"
 #include "xdg_surface.h"
-
-struct zwl_xdg_toplevel {
-  struct wl_resource *resource;
-  struct zwl_xdg_surface *xdg_surface;
-  struct wl_listener xdg_surface_destroy_listener;
-  char *title;
-};
 
 static void zwl_xdg_toplevel_destroy(struct zwl_xdg_toplevel *xdg_toplevel);
 
@@ -179,12 +175,77 @@ static void zwl_xdg_toplevel_xdg_surface_destroy_signal_handler(struct wl_listen
   wl_resource_destroy(xdg_toplevel->resource);
 }
 
+static void zwl_xdg_toplevel_xdg_surface_configure_handler(struct wl_listener *listener, void *data)
+{
+  UNUSED(data);
+  struct zwl_xdg_toplevel *xdg_toplevel =
+      wl_container_of(listener, xdg_toplevel, xdg_surface_configure_listener);
+  struct wl_array states;
+
+  wl_array_init(&states);
+
+  // TODO: configure states if needed.
+
+  xdg_toplevel_send_configure(xdg_toplevel->resource, xdg_toplevel->config.width, xdg_toplevel->config.height,
+                              &states);
+
+  wl_array_release(&states);
+
+  xdg_toplevel->configured = true;
+}
+
+static void zwl_xdg_toplevel_xdg_surface_set_window_geometry_handler(struct wl_listener *listener, void *data)
+{
+  struct zwl_xdg_surface_window_geometry *window_geometry = data;
+  struct zwl_xdg_toplevel *xdg_toplevel =
+      wl_container_of(listener, xdg_toplevel, xdg_surface_set_window_geometry_listener);
+
+  xdg_toplevel->config.width = window_geometry->width;
+  xdg_toplevel->config.height = window_geometry->height;
+  xdg_toplevel->configured = false;
+}
+
+static void zwl_xdg_toplevel_surface_commit_handler(struct wl_listener *listener, void *data)
+{
+  struct zwl_surface *surface = data;
+  struct zwl_xdg_toplevel *xdg_toplevel = wl_container_of(listener, xdg_toplevel, surface_commit_listener);
+
+  // TODO: apply other state if needed
+
+  if (xdg_toplevel->configured == false) zwl_xdg_surface_configure(xdg_toplevel->xdg_surface);
+
+  // TODO: call xdg_surface.configure should be scheduled, not immediate.
+
+  // TODO: config state must be applied after the clinet replies ack_configure.
+
+  zwc_virtual_object_commit(xdg_toplevel->virtual_object);
+
+  if (surface->pending.buffer_resource != NULL) wl_buffer_send_release(surface->pending.buffer_resource);
+}
+
+static void zwl_xdg_toplevel_virtual_object_callback_done(void *data, uint32_t callback_time)
+{
+  struct zwl_callback *callback = data;
+
+  wl_callback_send_done(callback->resource, callback_time);
+  wl_resource_destroy(callback->resource);
+}
+
+static void zwl_xdg_toplevel_surface_frame_handler(struct wl_listener *listener, void *data)
+{
+  struct zwl_callback *callback = data;
+  struct zwl_xdg_toplevel *xdg_toplevel = wl_container_of(listener, xdg_toplevel, surface_frame_listener);
+
+  zwc_virtual_object_add_frame_callback(xdg_toplevel->virtual_object,
+                                        zwl_xdg_toplevel_virtual_object_callback_done, callback);
+}
+
 struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint32_t id,
                                                  struct zwl_xdg_surface *xdg_surface)
 {
   struct zwl_xdg_toplevel *xdg_toplevel;
   struct wl_resource *resource;
-  struct wl_signal *xdg_surface_destroy_signal;
+  struct zwc_virtual_object *virtual_object;
 
   xdg_toplevel = zalloc(sizeof *xdg_toplevel);
   if (xdg_toplevel == NULL) {
@@ -192,23 +253,51 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
     goto out;
   }
 
+  virtual_object = zwc_virtual_object_create(xdg_surface->surface->compositor->zwc_display);
+  if (virtual_object == NULL) {
+    wl_client_post_no_memory(client);
+    goto out_xdg_toplevel;
+  }
+
   resource = wl_resource_create(client, &xdg_toplevel_interface, 3, id);
   if (resource == NULL) {
     wl_client_post_no_memory(client);
-    goto out_xdg_toplevel;
+    goto out_zwc_toplevel;
   }
   wl_resource_set_implementation(resource, &zwl_xdg_toplevel_interface, xdg_toplevel,
                                  zwl_xdg_toplevel_handle_destroy);
 
   xdg_toplevel->resource = resource;
-  xdg_toplevel->title = strdup("");
+
+  /* zalloc set xdg_toplevel->config to {0,0}*/
+  xdg_toplevel->configured = false;
+
+  xdg_toplevel->xdg_surface_configure_listener.notify = zwl_xdg_toplevel_xdg_surface_configure_handler;
+  wl_signal_add(&xdg_surface->configure_signal, &xdg_toplevel->xdg_surface_configure_listener);
+
+  xdg_toplevel->virtual_object = virtual_object;
 
   xdg_toplevel->xdg_surface = xdg_surface;
   xdg_toplevel->xdg_surface_destroy_listener.notify = zwl_xdg_toplevel_xdg_surface_destroy_signal_handler;
-  xdg_surface_destroy_signal = zwl_xdg_surface_get_destroy_signal(xdg_surface);
-  wl_signal_add(xdg_surface_destroy_signal, &xdg_toplevel->xdg_surface_destroy_listener);
+  wl_signal_add(&xdg_surface->destroy_signal, &xdg_toplevel->xdg_surface_destroy_listener);
+
+  xdg_toplevel->xdg_surface_set_window_geometry_listener.notify =
+      zwl_xdg_toplevel_xdg_surface_set_window_geometry_handler;
+  wl_signal_add(&xdg_surface->set_window_geometry_signal,
+                &xdg_toplevel->xdg_surface_set_window_geometry_listener);
+
+  xdg_toplevel->surface_commit_listener.notify = zwl_xdg_toplevel_surface_commit_handler;
+  wl_signal_add(&xdg_surface->surface->commit_signal, &xdg_toplevel->surface_commit_listener);
+
+  xdg_toplevel->surface_frame_listener.notify = zwl_xdg_toplevel_surface_frame_handler;
+  wl_signal_add(&xdg_surface->surface->frame_signal, &xdg_toplevel->surface_frame_listener);
+
+  xdg_toplevel->title = strdup("");
 
   return xdg_toplevel;
+
+out_zwc_toplevel:
+  zwc_virtual_object_destroy(virtual_object);
 
 out_xdg_toplevel:
   free(xdg_toplevel);
@@ -219,6 +308,12 @@ out:
 
 static void zwl_xdg_toplevel_destroy(struct zwl_xdg_toplevel *xdg_toplevel)
 {
+  zwc_virtual_object_destroy(xdg_toplevel->virtual_object);
+  wl_list_remove(&xdg_toplevel->surface_commit_listener.link);
+  wl_list_remove(&xdg_toplevel->surface_frame_listener.link);
+  wl_list_remove(&xdg_toplevel->xdg_surface_configure_listener.link);
+  wl_list_remove(&xdg_toplevel->xdg_surface_set_window_geometry_listener.link);
   wl_list_remove(&xdg_toplevel->xdg_surface_destroy_listener.link);
+  free(xdg_toplevel->title);
   free(xdg_toplevel);
 }

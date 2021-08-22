@@ -2,11 +2,10 @@
 
 #include <wayland-server.h>
 
+#include "callback.h"
+#include "compositor.h"
+#include "stdio.h"
 #include "util.h"
-
-struct zwl_surface {
-  struct wl_signal destroy_signal;
-};
 
 static void zwl_surface_destroy(struct zwl_surface *surface);
 
@@ -25,14 +24,19 @@ static void zwl_surface_protocol_destory(struct wl_client *client, struct wl_res
   wl_resource_destroy(resource);
 }
 static void zwl_surface_protocol_attach(struct wl_client *client, struct wl_resource *resource,
-                                        struct wl_resource *buffer, int32_t x, int32_t y)
+                                        struct wl_resource *buffer_resource, int32_t x, int32_t y)
 {
   UNUSED(client);
-  UNUSED(resource);
-  UNUSED(buffer);
   UNUSED(x);
   UNUSED(y);
-  // TODO: implement
+
+  struct zwl_surface *surface;
+
+  surface = wl_resource_get_user_data(resource);
+
+  surface->pending.buffer_resource = buffer_resource;
+
+  // TODO: implement more
 }
 
 static void zwl_surface_protocol_damage(struct wl_client *client, struct wl_resource *resource, int32_t x,
@@ -48,12 +52,16 @@ static void zwl_surface_protocol_damage(struct wl_client *client, struct wl_reso
 }
 
 static void zwl_surface_protocol_frame(struct wl_client *client, struct wl_resource *resource,
-                                       uint32_t callback)
+                                       uint32_t callback_id)
 {
-  UNUSED(client);
-  UNUSED(resource);
-  UNUSED(callback);
-  // TODO: implement
+  struct zwl_surface *surface = wl_resource_get_user_data(resource);
+  struct zwl_callback *callback;
+  callback = zwl_callback_create(client, callback_id);
+  if (callback == NULL) {
+    fprintf(stderr, "failed to create frame callback\n");
+  }
+
+  wl_signal_emit(&surface->frame_signal, callback);
 }
 
 static void zwl_surface_protocol_set_opaque_region(struct wl_client *client, struct wl_resource *resource,
@@ -77,8 +85,11 @@ static void zwl_surface_protocol_set_input_region(struct wl_client *client, stru
 static void zwl_surface_protocol_commit(struct wl_client *client, struct wl_resource *resource)
 {
   UNUSED(client);
-  UNUSED(resource);
-  // TODO: implement
+  struct zwl_surface *surface;
+
+  surface = wl_resource_get_user_data(resource);
+
+  wl_signal_emit(&surface->commit_signal, surface);
 }
 
 static void zwl_surface_protocol_set_buffer_transform(struct wl_client *client, struct wl_resource *resource,
@@ -124,7 +135,18 @@ static const struct wl_surface_interface zwl_surface_interface = {
     .damage_buffer = zwl_surface_protocol_damage_buffer,
 };
 
-struct zwl_surface *zwl_surface_create(struct wl_client *client, uint32_t id)
+static void zwl_surface_compositor_destroy_handler(struct wl_listener *listener, void *data)
+{
+  UNUSED(data);
+  struct zwl_surface *surface;
+
+  surface = wl_container_of(listener, surface, compositor_destroy_listener);
+
+  wl_resource_destroy(surface->resource);
+}
+
+struct zwl_surface *zwl_surface_create(struct wl_client *client, uint32_t id,
+                                       struct zwl_compositor *compositor)
 {
   struct zwl_surface *surface;
   struct wl_resource *resource;
@@ -142,7 +164,18 @@ struct zwl_surface *zwl_surface_create(struct wl_client *client, uint32_t id)
   }
   wl_resource_set_implementation(resource, &zwl_surface_interface, surface, zwl_surface_handle_destroy);
 
+  surface->resource = resource;
+
+  wl_signal_init(&surface->commit_signal);
+  wl_signal_init(&surface->frame_signal);
   wl_signal_init(&surface->destroy_signal);
+
+  surface->compositor = compositor;
+  surface->compositor_destroy_listener.notify = zwl_surface_compositor_destroy_handler;
+  wl_signal_add(&compositor->destroy_signal, &surface->compositor_destroy_listener);
+
+  surface->pending.buffer_resource = NULL;
+  // TODO: listen buffer resource destroy signal
 
   return surface;
 
@@ -156,6 +189,7 @@ out:
 static void zwl_surface_destroy(struct zwl_surface *surface)
 {
   wl_signal_emit(&surface->destroy_signal, surface);
+  wl_list_remove(&surface->compositor_destroy_listener.link);
   free(surface);
 }
 
