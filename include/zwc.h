@@ -35,4 +35,7 @@ void zwc_virtual_object_add_frame_callback(struct zwc_virtual_object* virtual_ob
                                            zwc_virtual_object_frame_callback_done_func_t done_func,
                                            void* data);
 
+void zwc_virtual_object_attach_surface(struct zwc_virtual_object* virtual_object, int32_t width,
+                                       int32_t height, uint32_t size, uint32_t format, uint8_t* data);
+
 #endif  //  ZWC_H

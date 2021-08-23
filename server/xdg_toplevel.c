@@ -207,16 +207,30 @@ static void zwl_xdg_toplevel_xdg_surface_set_window_geometry_handler(struct wl_l
 
 static void zwl_xdg_toplevel_surface_commit_handler(struct wl_listener *listener, void *data)
 {
-  struct zwl_surface *surface = data;
+  UNUSED(data);
   struct zwl_xdg_toplevel *xdg_toplevel = wl_container_of(listener, xdg_toplevel, surface_commit_listener);
+  struct zwl_surface *surface = xdg_toplevel->xdg_surface->surface;
 
   // TODO: apply other state if needed
 
   if (xdg_toplevel->configured == false) zwl_xdg_surface_configure(xdg_toplevel->xdg_surface);
 
-  // TODO: call xdg_surface.configure should be scheduled, not immediate.
+  // TODO: xdg_surface.configure should be scheduled, not immediate.
 
   // TODO: config state must be applied after the clinet replies ack_configure.
+
+  if (surface->pending.buffer_resource != NULL) {
+    struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->pending.buffer_resource);
+    enum wl_shm_format format = wl_shm_buffer_get_format(shm_buffer);
+    uint32_t stride = wl_shm_buffer_get_stride(shm_buffer);
+    uint32_t width = wl_shm_buffer_get_width(shm_buffer);
+    uint32_t height = wl_shm_buffer_get_height(shm_buffer);
+    uint32_t size = stride * height;
+    wl_shm_buffer_begin_access(shm_buffer);
+    uint8_t *data = wl_shm_buffer_get_data(shm_buffer);
+    zwc_virtual_object_attach_surface(xdg_toplevel->virtual_object, width, height, size, format, data);
+    wl_shm_buffer_end_access(shm_buffer);
+  }
 
   zwc_virtual_object_commit(xdg_toplevel->virtual_object);
 

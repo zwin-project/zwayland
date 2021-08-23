@@ -89,7 +89,7 @@ static void zwl_surface_protocol_commit(struct wl_client *client, struct wl_reso
 
   surface = wl_resource_get_user_data(resource);
 
-  wl_signal_emit(&surface->commit_signal, surface);
+  wl_signal_emit(&surface->commit_signal, NULL);
 }
 
 static void zwl_surface_protocol_set_buffer_transform(struct wl_client *client, struct wl_resource *resource,

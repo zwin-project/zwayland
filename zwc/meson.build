@@ -3,6 +3,7 @@ dep_libzwc = [
 ]
 
 srcs_libzwc = files([
+  'shm_pool.c',
   'zwc_display.c',
   'zwc_global.c',
   'zwc_virtual_object.c',
