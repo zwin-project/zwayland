@@ -32,6 +32,9 @@ bool zwc_shm_pool_resize(struct zwc_shm_pool* shm_pool, int32_t offset, int32_t 
 {
   if (ftruncate(shm_pool->fd, offset + size) < 0) return false;
   wl_shm_pool_resize(shm_pool->pool, offset + size);
+  munmap(shm_pool->shm_data, shm_pool->size);
+  shm_pool->size = size;
+  shm_pool->shm_data = mmap(NULL, shm_pool->size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_pool->fd, 0);
   return true;
 }
 

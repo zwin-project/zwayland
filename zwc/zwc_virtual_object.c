@@ -1,6 +1,8 @@
 #include "zwc_virtual_object.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <time.h>
 #include <wayland-client.h>
 #include <z11-client-protocol.h>
 #include <z11-opengl-client-protocol.h>
@@ -48,6 +50,9 @@ struct zwc_virtual_object *zwc_virtual_object_create(struct zwc_display *display
 
   virtual_object->texture = z11_opengl_create_texture_2d(display->global->gl);
 
+  virtual_object->texture_raw_buffer =
+      zwc_shm_pool_create_wl_raw_buffer(virtual_object->shm_pool, vertices_size, 0);
+
   virtual_object->shader_program =
       z11_opengl_create_shader_program(display->global->gl, vertex_shader, fragment_shader);
 
@@ -66,6 +71,9 @@ struct zwc_virtual_object *zwc_virtual_object_create(struct zwc_display *display
       virtual_object->render_component, 1, Z11_OPENGL_VERTEX_INPUT_ATTRIBUTE_FORMAT_FLOAT_VECTOR2,
       offsetof(struct vertex, uv));
   z11_opengl_render_component_set_topology(virtual_object->render_component, Z11_OPENGL_TOPOLOGY_TRIANGLES);
+
+  virtual_object->del_z = (float)rand() / RAND_MAX * 100;
+  virtual_object->del_x = (float)rand() / RAND_MAX * 400 - 200;
 
   return virtual_object;
 
@@ -104,15 +112,17 @@ void zwc_virtual_object_commit(struct zwc_virtual_object *virtual_object)
 void zwc_virtual_object_attach_surface(struct zwc_virtual_object *virtual_object, int32_t width,
                                        int32_t height, uint32_t size, uint32_t format, uint8_t *data)
 {
-  UNUSED(size);
-  UNUSED(data);
-  const int z = 300;
+  const int z = 400;
+  float del_z = virtual_object->del_z;
+  float del_x = virtual_object->del_x;
+  float tilt = (float)width * del_x / 400 / 2;
+  int vertices_size = sizeof(struct vertex) * 6;
   if (format != WL_SHM_FORMAT_ARGB8888 && format != WL_SHM_FORMAT_XRGB8888) return;
   if (virtual_object->width != width || virtual_object->height != height) {
-    struct vertex A = {{-width / 2, -height / 2, z}, {0, 1}};
-    struct vertex B = {{width / 2, -height / 2, z}, {1, 1}};
-    struct vertex C = {{width / 2, height / 2, z}, {1, 0}};
-    struct vertex D = {{-width / 2, height / 2, z}, {0, 0}};
+    struct vertex A = {{-width / 2 + del_x, -height / 2, z + del_z + tilt}, {0, 1}};
+    struct vertex B = {{width / 2 + del_x, -height / 2, z + del_z - tilt}, {1, 1}};
+    struct vertex C = {{width / 2 + del_x, height / 2, z + del_z - tilt}, {1, 0}};
+    struct vertex D = {{-width / 2 + del_x, height / 2, z + del_z + tilt}, {0, 0}};
     virtual_object->vertices_data[0] = A;
     virtual_object->vertices_data[1] = B;
     virtual_object->vertices_data[2] = C;
@@ -122,6 +132,20 @@ void zwc_virtual_object_attach_surface(struct zwc_virtual_object *virtual_object
     z11_opengl_vertex_buffer_attach(virtual_object->vertex_buffer, virtual_object->vertices_raw_buffer,
                                     sizeof(struct vertex));
   }
+
+  if (zwc_shm_pool_needs_resize(virtual_object->shm_pool, vertices_size, size)) {
+    zwc_shm_pool_resize(virtual_object->shm_pool, vertices_size, size);
+    virtual_object->vertices_data = zwc_shm_pool_get_buffer(virtual_object->shm_pool, 0);
+  }
+
+  wl_raw_buffer_destroy(virtual_object->texture_raw_buffer);
+  virtual_object->texture_raw_buffer =
+      zwc_shm_pool_create_wl_raw_buffer(virtual_object->shm_pool, vertices_size, size);
+
+  uint8_t *texture_data = zwc_shm_pool_get_buffer(virtual_object->shm_pool, vertices_size);
+  memcpy(texture_data, data, size);
+  z11_opengl_texture_2d_set_image(virtual_object->texture, virtual_object->texture_raw_buffer,
+                                  Z11_OPENGL_TEXTURE_2D_FORMAT_ARGB8888, width, height);
 }
 
 struct zwc_virtual_object_callback_data {
@@ -179,6 +203,6 @@ const char *fragment_shader =
     "out vec4 outputColor;\n"
     "void main()\n"
     "{\n"
-    // "  outputColor = texture(myTexture, v2UVcoords);\n"
-    "  outputColor = vec4(1.0, 0.647, 0.0, 1.0);\n"
+    "  outputColor = texture(myTexture, v2UVcoords);\n"
+    // "  outputColor = vec4(1.0, 0.647, 0.0, 1.0);\n"
     "}\n";
