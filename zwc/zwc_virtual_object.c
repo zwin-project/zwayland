@@ -119,6 +119,8 @@ void zwc_virtual_object_attach_surface(struct zwc_virtual_object *virtual_object
   int vertices_size = sizeof(struct vertex) * 6;
   if (format != WL_SHM_FORMAT_ARGB8888 && format != WL_SHM_FORMAT_XRGB8888) return;
   if (virtual_object->width != width || virtual_object->height != height) {
+    virtual_object->width = width;
+    virtual_object->height = height;
     struct vertex A = {{-width / 2 + del_x, -height / 2, z + del_z + tilt}, {0, 1}};
     struct vertex B = {{width / 2 + del_x, -height / 2, z + del_z - tilt}, {1, 1}};
     struct vertex C = {{width / 2 + del_x, height / 2, z + del_z - tilt}, {1, 0}};
