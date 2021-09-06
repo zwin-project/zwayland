@@ -6,14 +6,9 @@
 #include <zwc.h>
 
 #include "compositor_global.h"
+#include "region.h"
 #include "surface.h"
 #include "util.h"
-
-struct zwl_compositor {
-  struct zwc_display *zwc_display;
-  struct wl_listener global_flush_listener;
-  struct wl_event_source *event_source;
-};
 
 static void zwl_compositor_destroy(struct zwl_compositor *compositor);
 
@@ -29,17 +24,23 @@ static void zwl_compositor_handle_destroy(struct wl_resource *resource)
 static void zwl_compositor_protocol_create_surface(struct wl_client *client, struct wl_resource *resource,
                                                    uint32_t id)
 {
-  UNUSED(resource);
-  struct zwl_surface *surface = zwl_surface_create(client, id);
+  struct zwl_compositor *compositor;
+  struct zwl_surface *surface;
+
+  compositor = wl_resource_get_user_data(resource);
+
+  surface = zwl_surface_create(client, id, compositor);
   if (surface == NULL) fprintf(stderr, "failed to create a surface\n");
 }
 
 static void zwl_compositor_protocol_create_region(struct wl_client *client, struct wl_resource *resource,
                                                   uint32_t id)
 {
-  UNUSED(client);
   UNUSED(resource);
-  UNUSED(id);
+  struct zwl_region *region;
+  region = zwl_region_create(client, id);
+  if (region == NULL) fprintf(stderr, "failed to create a region\n");
+
   // TODO: implement
 }
 
@@ -110,7 +111,9 @@ struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t 
   wl_resource_set_implementation(resource, &zwl_compositor_interface, compositor,
                                  zwl_compositor_handle_destroy);
 
-  struct wl_event_loop *loop = wl_display_get_event_loop(compositor_global->display);
+  compositor->display = compositor_global->display;
+
+  struct wl_event_loop *loop = wl_display_get_event_loop(compositor->display);
 
   fd = zwc_display_get_fd(compositor->zwc_display);
   compositor->event_source =
@@ -118,6 +121,8 @@ struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t 
 
   compositor->global_flush_listener.notify = zwl_compositor_global_flush_handler;
   wl_signal_add(&compositor_global->flush_signal, &compositor->global_flush_listener);
+
+  wl_signal_init(&compositor->destroy_signal);
 
   return compositor;
 
@@ -133,6 +138,7 @@ out:
 
 static void zwl_compositor_destroy(struct zwl_compositor *compositor)
 {
+  wl_signal_emit(&compositor->destroy_signal, compositor);
   zwc_display_destroy(compositor->zwc_display);
   wl_list_remove(&compositor->global_flush_listener.link);
   wl_event_source_remove(compositor->event_source);

@@ -3,8 +3,10 @@ dep_libzwc = [
 ]
 
 srcs_libzwc = files([
+  'shm_pool.c',
   'zwc_display.c',
   'zwc_global.c',
+  'zwc_virtual_object.c',
 ]) + [
   z11_protocol_c,
   z11_client_protocol_h,

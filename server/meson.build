@@ -1,7 +1,9 @@
 source_files = [
+  'callback.c',
   'compositor.c',
   'compositor_global.c',
   'main.c',
+  'region.c',
   'surface.c',
   'util.c',
   'xdg_surface.c',

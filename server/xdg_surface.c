@@ -9,13 +9,6 @@
 #include "xdg_surface.h"
 #include "xdg_toplevel.h"
 
-struct zwl_xdg_surface {
-  struct wl_resource* resource;
-  struct wl_signal destroy_signal;
-  struct zwl_surface* surface;
-  struct wl_listener surface_destroy_listener;
-};
-
 static void zwl_xdg_surface_destroy(struct zwl_xdg_surface* xdg_surface);
 
 static void zwl_xdg_surface_handle_destroy(struct wl_resource* resource)
@@ -63,11 +56,17 @@ static void zwl_xdg_surface_protocol_set_window_geometry(struct wl_client* clien
 {
   UNUSED(client);
   UNUSED(resource);
-  UNUSED(x);
-  UNUSED(y);
-  UNUSED(width);
-  UNUSED(height);
-  // TODO: implement
+  struct zwl_xdg_surface* xdg_surface;
+  struct zwl_xdg_surface_window_geometry window_geometry;
+
+  xdg_surface = wl_resource_get_user_data(resource);
+
+  window_geometry.x = x;
+  window_geometry.x = y;
+  window_geometry.width = width;
+  window_geometry.height = height;
+
+  wl_signal_emit(&xdg_surface->set_window_geometry_signal, &window_geometry);
 }
 
 static void zwl_xdg_surface_protocol_ack_configure(struct wl_client* client, struct wl_resource* resource,
@@ -123,6 +122,9 @@ struct zwl_xdg_surface* zwl_xdg_surface_create(struct wl_client* client, uint32_
   surface_destroy_signal = zwl_surface_get_destroy_signal(surface);
   wl_signal_add(surface_destroy_signal, &xdg_surface->surface_destroy_listener);
 
+  wl_signal_init(&xdg_surface->configure_signal);
+  wl_signal_init(&xdg_surface->set_window_geometry_signal);
+
   return xdg_surface;
 
 out_xdg_surface:
@@ -139,7 +141,12 @@ static void zwl_xdg_surface_destroy(struct zwl_xdg_surface* xdg_surface)
   free(xdg_surface);
 }
 
-struct wl_signal* zwl_xdg_surface_get_destroy_signal(struct zwl_xdg_surface* xdg_surface)
+void zwl_xdg_surface_configure(struct zwl_xdg_surface* xdg_surface)
 {
-  return &xdg_surface->destroy_signal;
+  uint32_t serial;
+
+  serial = wl_display_next_serial(xdg_surface->surface->compositor->display);
+  wl_signal_emit(&xdg_surface->configure_signal, NULL);  // second args will be "serial", maybe
+
+  xdg_surface_send_configure(xdg_surface->resource, serial);
 }
