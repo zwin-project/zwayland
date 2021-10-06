@@ -2,7 +2,6 @@
 #define ZWAYLAND_XDG_TOPLEVEL_H
 
 #include <wayland-server.h>
-#include <zwc.h>
 
 #include "xdg_surface.h"
 
@@ -16,7 +15,6 @@ struct zwl_xdg_toplevel {
   struct zwl_xdg_toplevel_config config;
   bool configured;
   struct wl_listener xdg_surface_configure_listener;
-  struct zwc_virtual_object *virtual_object;
   struct zwl_xdg_surface *xdg_surface;  // Non null
   struct wl_listener xdg_surface_destroy_listener;
   struct wl_listener xdg_surface_set_window_geometry_listener;

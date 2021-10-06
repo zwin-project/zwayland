@@ -7,10 +7,7 @@ project(
   meson_version : '>=0.57.0',
 )
 
-zwc_version = '0.0.0'
-
 public_inc = include_directories('include')
 
 subdir('protocol')
-subdir('zwc')
 subdir('server')

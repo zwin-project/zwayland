@@ -26,7 +26,6 @@ source_files = [
 
 dependencies = [
   dependency('wayland-server'),
-  libzwc_dep,
 ]
 
 executable(

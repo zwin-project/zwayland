@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <wayland-server.h>
-#include <zwc.h>
 
 #include "callback.h"
 #include "surface.h"
@@ -157,11 +156,13 @@ static void zwl_shell_surface_surface_commit_handler(struct wl_listener *listene
     uint32_t size = stride * height;
     wl_shm_buffer_begin_access(shm_buffer);
     uint8_t *data = wl_shm_buffer_get_data(shm_buffer);
-    zwc_virtual_object_attach_surface(shell_surface->virtual_object, width, height, size, format, data);
+    UNUSED(data);
+    UNUSED(width);
+    UNUSED(height);
+    UNUSED(size);
+    UNUSED(format);
     wl_shm_buffer_end_access(shm_buffer);
   }
-
-  zwc_virtual_object_commit(shell_surface->virtual_object);
 
   if (surface->pending.buffer_resource != NULL) wl_buffer_send_release(surface->pending.buffer_resource);
 }
@@ -181,8 +182,10 @@ static void zwl_shell_surface_surface_frame_handler(struct wl_listener *listener
 
   shell_surface = wl_container_of(listener, shell_surface, surface_frame_listener);
 
-  zwc_virtual_object_add_frame_callback(shell_surface->virtual_object,
-                                        zwl_shell_surface_virtual_object_callback_done, callback);
+  // TODO: implement
+  (void)zwl_shell_surface_virtual_object_callback_done;
+  (void)callback;
+  (void)shell_surface;
 }
 
 static void zwl_shell_surface_surface_destroy_handler(struct wl_listener *listener, void *data)
@@ -208,16 +211,10 @@ struct zwl_shell_surface *zwl_shell_surface_create(struct wl_client *client, uin
     goto out;
   }
 
-  shell_surface->virtual_object = zwc_virtual_object_create(surface->compositor->zwc_display);
-  if (shell_surface->virtual_object == NULL) {
-    wl_client_post_no_memory(client);
-    goto out_shell_surface;
-  }
-
   resource = wl_resource_create(client, &wl_shell_surface_interface, 1, id);
   if (resource == NULL) {
     wl_client_post_no_memory(client);
-    goto out_virtual_object;
+    goto out_shell_surface;
   }
 
   wl_resource_set_implementation(resource, &zwl_shell_surface_interface, shell_surface,
@@ -238,9 +235,6 @@ struct zwl_shell_surface *zwl_shell_surface_create(struct wl_client *client, uin
 
   return shell_surface;
 
-out_virtual_object:
-  zwc_virtual_object_destroy(shell_surface->virtual_object);
-
 out_shell_surface:
   free(shell_surface);
 
@@ -253,6 +247,5 @@ static void zwl_shell_surface_destroy(struct zwl_shell_surface *shell_surface)
   wl_list_remove(&shell_surface->surface_commit_listener.link);
   wl_list_remove(&shell_surface->surface_frame_listener.link);
   wl_list_remove(&shell_surface->surface_destroy_listener.link);
-  zwc_virtual_object_destroy(shell_surface->virtual_object);
   free(shell_surface);
 }

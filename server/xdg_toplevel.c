@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <wayland-server.h>
-#include <zwc.h>
 
 #include "callback.h"
 #include "surface.h"
@@ -228,11 +227,14 @@ static void zwl_xdg_toplevel_surface_commit_handler(struct wl_listener *listener
     uint32_t size = stride * height;
     wl_shm_buffer_begin_access(shm_buffer);
     uint8_t *data = wl_shm_buffer_get_data(shm_buffer);
-    zwc_virtual_object_attach_surface(xdg_toplevel->virtual_object, width, height, size, format, data);
+    UNUSED(width);
+    UNUSED(height);
+    UNUSED(size);
+    UNUSED(format);
+    UNUSED(data);
+    // TODO: implement
     wl_shm_buffer_end_access(shm_buffer);
   }
-
-  zwc_virtual_object_commit(xdg_toplevel->virtual_object);
 
   if (surface->pending.buffer_resource != NULL) wl_buffer_send_release(surface->pending.buffer_resource);
 }
@@ -250,8 +252,10 @@ static void zwl_xdg_toplevel_surface_frame_handler(struct wl_listener *listener,
   struct zwl_callback *callback = data;
   struct zwl_xdg_toplevel *xdg_toplevel = wl_container_of(listener, xdg_toplevel, surface_frame_listener);
 
-  zwc_virtual_object_add_frame_callback(xdg_toplevel->virtual_object,
-                                        zwl_xdg_toplevel_virtual_object_callback_done, callback);
+  // TODO: implement
+  UNUSED(callback);
+  UNUSED(xdg_toplevel);
+  UNUSED(zwl_xdg_toplevel_virtual_object_callback_done);
 }
 
 struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint32_t id,
@@ -259,7 +263,6 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
 {
   struct zwl_xdg_toplevel *xdg_toplevel;
   struct wl_resource *resource;
-  struct zwc_virtual_object *virtual_object;
 
   xdg_toplevel = zalloc(sizeof *xdg_toplevel);
   if (xdg_toplevel == NULL) {
@@ -267,16 +270,10 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
     goto out;
   }
 
-  virtual_object = zwc_virtual_object_create(xdg_surface->surface->compositor->zwc_display);
-  if (virtual_object == NULL) {
-    wl_client_post_no_memory(client);
-    goto out_xdg_toplevel;
-  }
-
   resource = wl_resource_create(client, &xdg_toplevel_interface, 3, id);
   if (resource == NULL) {
     wl_client_post_no_memory(client);
-    goto out_zwc_toplevel;
+    goto out_xdg_toplevel;
   }
   wl_resource_set_implementation(resource, &zwl_xdg_toplevel_interface, xdg_toplevel,
                                  zwl_xdg_toplevel_handle_destroy);
@@ -288,8 +285,6 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
 
   xdg_toplevel->xdg_surface_configure_listener.notify = zwl_xdg_toplevel_xdg_surface_configure_handler;
   wl_signal_add(&xdg_surface->configure_signal, &xdg_toplevel->xdg_surface_configure_listener);
-
-  xdg_toplevel->virtual_object = virtual_object;
 
   xdg_toplevel->xdg_surface = xdg_surface;
   xdg_toplevel->xdg_surface_destroy_listener.notify = zwl_xdg_toplevel_xdg_surface_destroy_signal_handler;
@@ -310,9 +305,6 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
 
   return xdg_toplevel;
 
-out_zwc_toplevel:
-  zwc_virtual_object_destroy(virtual_object);
-
 out_xdg_toplevel:
   free(xdg_toplevel);
 
@@ -322,7 +314,6 @@ out:
 
 static void zwl_xdg_toplevel_destroy(struct zwl_xdg_toplevel *xdg_toplevel)
 {
-  zwc_virtual_object_destroy(xdg_toplevel->virtual_object);
   wl_list_remove(&xdg_toplevel->surface_commit_listener.link);
   wl_list_remove(&xdg_toplevel->surface_frame_listener.link);
   wl_list_remove(&xdg_toplevel->xdg_surface_configure_listener.link);

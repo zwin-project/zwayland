@@ -6,10 +6,8 @@
 #include "compositor_global.h"
 
 struct zwl_compositor {
-  struct zwc_display *zwc_display;
   struct wl_display *display;
   struct wl_listener global_flush_listener;
-  struct wl_event_source *event_source;
   struct wl_signal destroy_signal;
 };
 
