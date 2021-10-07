@@ -25,7 +25,8 @@ source_files = [
 ]
 
 dependencies = [
-  dependency('wayland-server'),
+  wayland_server_dep,
+  zsurface_dep,
 ]
 
 executable(

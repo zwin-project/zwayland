@@ -2,6 +2,7 @@
 #define ZWAYLAND_XDG_TOPLEVEL_H
 
 #include <wayland-server.h>
+#include <zsurface.h>
 
 #include "xdg_surface.h"
 
@@ -21,6 +22,8 @@ struct zwl_xdg_toplevel {
   struct wl_listener surface_commit_listener;
   struct wl_listener surface_frame_listener;
   char *title;
+
+  struct zsurface_toplevel *zsurface_toplevel;
 };
 
 struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint32_t id,

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <wayland-server.h>
+#include <zsurface.h>
 
 #include "callback.h"
 #include "surface.h"
@@ -185,6 +186,10 @@ static void zwl_xdg_toplevel_xdg_surface_configure_handler(struct wl_listener *l
 
   // TODO: configure states if needed.
 
+  // TODO: send configure event after beeing notified that the cuboid window has actually resized
+  zsurface_toplevel_resize(xdg_toplevel->zsurface_toplevel, (float)xdg_toplevel->config.width / 10,
+                           (float)xdg_toplevel->config.height / 10);
+
   xdg_toplevel_send_configure(xdg_toplevel->resource, xdg_toplevel->config.width, xdg_toplevel->config.height,
                               &states);
 
@@ -220,26 +225,22 @@ static void zwl_xdg_toplevel_surface_commit_handler(struct wl_listener *listener
 
   if (surface->pending.buffer_resource != NULL) {
     struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->pending.buffer_resource);
-    enum wl_shm_format format = wl_shm_buffer_get_format(shm_buffer);
-    uint32_t stride = wl_shm_buffer_get_stride(shm_buffer);
     uint32_t width = wl_shm_buffer_get_width(shm_buffer);
     uint32_t height = wl_shm_buffer_get_height(shm_buffer);
-    uint32_t size = stride * height;
+
+    struct zsurface_view *view = zsurface_toplevel_get_view(xdg_toplevel->zsurface_toplevel);
+
     wl_shm_buffer_begin_access(shm_buffer);
-    uint8_t *data = wl_shm_buffer_get_data(shm_buffer);
-    UNUSED(width);
-    UNUSED(height);
-    UNUSED(size);
-    UNUSED(format);
-    UNUSED(data);
-    // TODO: implement
+    struct zsurface_color_bgra *data = wl_shm_buffer_get_data(shm_buffer);
+    zsurface_view_set_texture(view, data, width, height);  // TODO: pass format info
+    zsurface_view_commit(view);
     wl_shm_buffer_end_access(shm_buffer);
   }
 
   if (surface->pending.buffer_resource != NULL) wl_buffer_send_release(surface->pending.buffer_resource);
 }
 
-static void zwl_xdg_toplevel_virtual_object_callback_done(void *data, uint32_t callback_time)
+static void zwl_xdg_toplevel_zsurface_view_callback_done(void *data, uint32_t callback_time)
 {
   struct zwl_callback *callback = data;
 
@@ -251,11 +252,9 @@ static void zwl_xdg_toplevel_surface_frame_handler(struct wl_listener *listener,
 {
   struct zwl_callback *callback = data;
   struct zwl_xdg_toplevel *xdg_toplevel = wl_container_of(listener, xdg_toplevel, surface_frame_listener);
+  struct zsurface_view *view = zsurface_toplevel_get_view(xdg_toplevel->zsurface_toplevel);
 
-  // TODO: implement
-  UNUSED(callback);
-  UNUSED(xdg_toplevel);
-  UNUSED(zwl_xdg_toplevel_virtual_object_callback_done);
+  zsurface_view_add_frame_callback(view, zwl_xdg_toplevel_zsurface_view_callback_done, callback);
 }
 
 struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint32_t id,
@@ -270,10 +269,16 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
     goto out;
   }
 
+  xdg_toplevel->zsurface_toplevel = zsurface_create_toplevel_view(xdg_surface->surface->compositor->zsurface);
+  if (xdg_toplevel->zsurface_toplevel == NULL) {
+    wl_client_post_no_memory(client);
+    goto out_xdg_toplevel;
+  }
+
   resource = wl_resource_create(client, &xdg_toplevel_interface, 3, id);
   if (resource == NULL) {
     wl_client_post_no_memory(client);
-    goto out_xdg_toplevel;
+    goto out_zsurface_toplevel;
   }
   wl_resource_set_implementation(resource, &zwl_xdg_toplevel_interface, xdg_toplevel,
                                  zwl_xdg_toplevel_handle_destroy);
@@ -305,6 +310,9 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
 
   return xdg_toplevel;
 
+out_zsurface_toplevel:
+  zsurface_destroy_toplevel_view(xdg_surface->surface->compositor->zsurface, xdg_toplevel->zsurface_toplevel);
+
 out_xdg_toplevel:
   free(xdg_toplevel);
 
@@ -319,6 +327,8 @@ static void zwl_xdg_toplevel_destroy(struct zwl_xdg_toplevel *xdg_toplevel)
   wl_list_remove(&xdg_toplevel->xdg_surface_configure_listener.link);
   wl_list_remove(&xdg_toplevel->xdg_surface_set_window_geometry_listener.link);
   wl_list_remove(&xdg_toplevel->xdg_surface_destroy_listener.link);
+  zsurface_destroy_toplevel_view(xdg_toplevel->xdg_surface->surface->compositor->zsurface,
+                                 xdg_toplevel->zsurface_toplevel);
   free(xdg_toplevel->title);
   free(xdg_toplevel);
 }
