@@ -25,8 +25,8 @@ source_files = [
 ]
 
 dependencies = [
-  dependency('wayland-server'),
-  libzwc_dep,
+  wayland_server_dep,
+  zsurface_dep,
 ]
 
 executable(

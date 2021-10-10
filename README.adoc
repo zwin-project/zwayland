@@ -4,7 +4,9 @@ Wayland clients under Z11.
 
 == Build
 
-Build & install link:https://github.com/gray-armor/z11[Z11] first
+Build & install link:https://github.com/gray-armor/z11[Z11]
+
+Build & install link:https://github.com/gray-armor/zsurface[zsurface]
 
 Build & install ZWayland
 
