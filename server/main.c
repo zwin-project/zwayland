@@ -43,6 +43,7 @@ int main(int argc, char const *argv[])
     fprintf(stderr, "failed to create a seat\n");
     return EXIT_FAILURE;
   }
+  compositor->seat = seat;
 
   shell = zwl_shell_create(display);
   if (shell == NULL) {

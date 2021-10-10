@@ -7,8 +7,6 @@ project(
   meson_version : '>=0.57.0',
 )
 
-public_inc = include_directories('include')
-
 wayland_server_dep = dependency('wayland-server')
 zsurface_dep = dependency('zsurface')
 

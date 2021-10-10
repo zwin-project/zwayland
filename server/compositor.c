@@ -6,7 +6,9 @@
 #include <zsurface.h>
 
 #include "compositor_global.h"
+#include "pointer.h"
 #include "region.h"
+#include "seat.h"
 #include "surface.h"
 #include "util.h"
 
@@ -102,11 +104,65 @@ static int zwl_compositor_zsurface_dispatch(int fd, uint32_t mask, void *data)
   return 0;
 }
 
+static void zwl_compositor_handle_seat_capabilities(void *data, struct zsurface *surface,
+                                                    uint32_t capabilities)
+{
+  UNUSED(surface);
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct wl_client *client = wl_resource_get_client(compositor->resource);
+
+  if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
+    struct zwl_pointer *pointer;
+    pointer = zwl_seat_ensure_pointer(seat, client);
+    if (pointer == NULL)
+      wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_NO_MEMORY, "failed to create a pointer");
+  } else if (!(capabilities & WL_SEAT_CAPABILITY_POINTER)) {
+    zwl_seat_destroy_pointer(seat, client);
+  }
+
+  // handle keyboard
+
+  zwl_seat_send_capabilities(seat, client);
+}
+
+static void zwl_compositor_handle_pointer_enter(void *data, struct zsurface_view *view, uint32_t x,
+                                                uint32_t y)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_surface *surface = zsurface_view_get_user_data(view);
+  if (surface == NULL) return;
+
+  zwl_pointer_send_enter(pointer, surface, x, y);
+}
+
+static void zwl_compositor_handle_pointer_motion(void *data, uint32_t x, uint32_t y)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+
+  zwl_pointer_send_motion(pointer, x, y);
+}
+
+static void zwl_compositor_handle_leave(void *data, struct zsurface_view *view)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_surface *surface = zsurface_view_get_user_data(view);
+  if (surface == NULL) return;
+
+  zwl_pointer_send_leave(pointer, surface);
+}
+
 static const struct zsurface_interface zsurface_interface = {
-    .seat_capability = NULL,
-    .pointer_enter = NULL,
-    .pointer_leave = NULL,
-    .pointer_motion = NULL,
+    .seat_capability = zwl_compositor_handle_seat_capabilities,
+    .pointer_enter = zwl_compositor_handle_pointer_enter,
+    .pointer_motion = zwl_compositor_handle_pointer_motion,
+    .pointer_leave = zwl_compositor_handle_leave,
 };
 
 struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t version, uint32_t id,
@@ -146,6 +202,7 @@ struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t 
 
   compositor->resource = resource;
   compositor->display = compositor_global->display;
+  compositor->compositor_global = compositor_global;
 
   loop = wl_display_get_event_loop(compositor->display);
   fd = zsurface_get_fd(compositor->zsurface);
