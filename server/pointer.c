@@ -69,6 +69,23 @@ void zwl_pointer_send_leave(struct zwl_pointer *pointer, struct zwl_surface *sur
   }
 }
 
+void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t button, uint32_t state)
+{
+  struct wl_resource *resource;
+  struct wl_display *display = wl_client_get_display(pointer->client);
+  uint32_t serial = wl_display_next_serial(display);
+  struct timeval tv;
+  uint32_t current_time_in_milles;
+
+  gettimeofday(&tv, NULL);
+  current_time_in_milles = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+
+  wl_resource_for_each(resource, &pointer->resource_list)
+  {
+    wl_pointer_send_button(resource, serial, current_time_in_milles, button, state);
+  }
+}
+
 static void zwl_pointer_handle_destroy(struct wl_resource *resource)
 {
   wl_list_remove(wl_resource_get_link(resource));

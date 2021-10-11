@@ -133,7 +133,7 @@ static void zwl_compositor_handle_pointer_enter(void *data, struct zsurface_view
   struct zwl_seat *seat = compositor->compositor_global->seat;
   struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
   struct zwl_surface *surface = zsurface_view_get_user_data(view);
-  if (surface == NULL) return;
+  if (surface == NULL || pointer == NULL) return;
 
   zwl_pointer_send_enter(pointer, surface, x, y);
 }
@@ -143,6 +143,7 @@ static void zwl_compositor_handle_pointer_motion(void *data, uint32_t x, uint32_
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
   struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  if (pointer == NULL) return;
 
   zwl_pointer_send_motion(pointer, x, y);
 }
@@ -153,9 +154,19 @@ static void zwl_compositor_handle_leave(void *data, struct zsurface_view *view)
   struct zwl_seat *seat = compositor->compositor_global->seat;
   struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
   struct zwl_surface *surface = zsurface_view_get_user_data(view);
-  if (surface == NULL) return;
+  if (surface == NULL || pointer == NULL) return;
 
   zwl_pointer_send_leave(pointer, surface);
+}
+
+static void zwl_compositor_handle_button(void *data, uint32_t button, uint32_t state)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  if (pointer == NULL) return;
+
+  zwl_pointer_send_button(pointer, button, state);
 }
 
 static const struct zsurface_interface zsurface_interface = {
@@ -163,6 +174,7 @@ static const struct zsurface_interface zsurface_interface = {
     .pointer_enter = zwl_compositor_handle_pointer_enter,
     .pointer_motion = zwl_compositor_handle_pointer_motion,
     .pointer_leave = zwl_compositor_handle_leave,
+    .pointer_button = zwl_compositor_handle_button,
 };
 
 struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t version, uint32_t id,

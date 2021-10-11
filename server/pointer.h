@@ -26,4 +26,6 @@ void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t x, uint32_t y
 
 void zwl_pointer_send_leave(struct zwl_pointer *pointer, struct zwl_surface *surface);
 
+void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t button, uint32_t state);
+
 #endif  //  ZWAYLAND_POINTER_H
