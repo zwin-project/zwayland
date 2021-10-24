@@ -12,6 +12,8 @@ source_files = [
   'shell_surface.c',
   'surface.c',
   'util.c',
+  'xdg_popup.c',
+  'xdg_positioner.c',
   'xdg_surface.c',
   'xdg_toplevel.c',
   'xdg_wm_base.c',

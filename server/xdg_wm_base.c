@@ -6,6 +6,7 @@
 #include "surface.h"
 #include "util.h"
 #include "xdg-shell-server-protocol.h"
+#include "xdg_positioner.h"
 #include "xdg_surface.h"
 
 #pragma GCC diagnostic push
@@ -33,10 +34,13 @@ static void zwl_wm_base_protocol_destroy(struct wl_client *client, struct wl_res
 static void zwl_wm_base_protocol_create_positioner(struct wl_client *client, struct wl_resource *resource,
                                                    uint32_t id)
 {
-  UNUSED(client);
   UNUSED(resource);
-  UNUSED(id);
-  // TODO: implementation
+  struct zwl_xdg_positioner *positioner;
+
+  positioner = zwl_xdg_positioner_create(client, id);
+  if (positioner == NULL) {
+    fprintf(stderr, "failed to create a xdg positioner\n");
+  }
 }
 
 static void zwl_wm_base_protocol_get_xdg_surface(struct wl_client *client, struct wl_resource *resource,

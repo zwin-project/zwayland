@@ -275,6 +275,11 @@ struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint3
     goto out_xdg_toplevel;
   }
 
+  {
+    struct zsurface_view *view = zsurface_toplevel_get_view(xdg_toplevel->zsurface_toplevel);
+    zsurface_view_set_user_data(view, xdg_surface->surface);
+  }
+
   resource = wl_resource_create(client, &xdg_toplevel_interface, 3, id);
   if (resource == NULL) {
     wl_client_post_no_memory(client);

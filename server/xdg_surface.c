@@ -6,6 +6,7 @@
 #include "surface.h"
 #include "util.h"
 #include "xdg-shell-server-protocol.h"
+#include "xdg_popup.h"
 #include "xdg_surface.h"
 #include "xdg_toplevel.h"
 
@@ -42,12 +43,15 @@ static void zwl_xdg_surface_protocol_get_popup(struct wl_client* client, struct 
                                                uint32_t id, struct wl_resource* parent,
                                                struct wl_resource* positioner)
 {
-  UNUSED(client);
-  UNUSED(resource);
-  UNUSED(id);
   UNUSED(parent);
   UNUSED(positioner);
-  // TODO: implement
+  struct zwl_xdg_surface* xdg_surface = wl_resource_get_user_data(resource);
+  struct zwl_xdg_popup* popup;
+  // TODO: implement more
+  popup = zwl_xdg_popup_create(client, id, xdg_surface);
+  if (popup == NULL) {
+    fprintf(stderr, "failed to create xdg popup\n");
+  }
 }
 
 static void zwl_xdg_surface_protocol_set_window_geometry(struct wl_client* client,
