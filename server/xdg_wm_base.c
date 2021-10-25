@@ -25,13 +25,15 @@ static void zwl_wm_base_handle_destroy(struct wl_resource *resource)
   zwl_wm_base_destroy(wm_base);
 }
 
-static void zwl_wm_base_protocol_destroy(struct wl_client *client, struct wl_resource *resource)
+static void zwl_wm_base_protocol_destroy(struct wl_client *client,
+                                         struct wl_resource *resource)
 {
   UNUSED(client);
   wl_resource_destroy(resource);
 }
 
-static void zwl_wm_base_protocol_create_positioner(struct wl_client *client, struct wl_resource *resource,
+static void zwl_wm_base_protocol_create_positioner(struct wl_client *client,
+                                                   struct wl_resource *resource,
                                                    uint32_t id)
 {
   UNUSED(resource);
@@ -43,8 +45,9 @@ static void zwl_wm_base_protocol_create_positioner(struct wl_client *client, str
   }
 }
 
-static void zwl_wm_base_protocol_get_xdg_surface(struct wl_client *client, struct wl_resource *resource,
-                                                 uint32_t id, struct wl_resource *surface_resource)
+static void zwl_wm_base_protocol_get_xdg_surface(
+    struct wl_client *client, struct wl_resource *resource, uint32_t id,
+    struct wl_resource *surface_resource)
 {
   UNUSED(resource);
   struct zwl_xdg_surface *xdg_furface;
@@ -58,7 +61,9 @@ static void zwl_wm_base_protocol_get_xdg_surface(struct wl_client *client, struc
   }
 }
 
-static void zwl_wm_base_protocol_pong(struct wl_client *client, struct wl_resource *resource, uint32_t serial)
+static void zwl_wm_base_protocol_pong(struct wl_client *client,
+                                      struct wl_resource *resource,
+                                      uint32_t serial)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -73,7 +78,8 @@ static const struct xdg_wm_base_interface zwl_wm_base_interface = {
     .pong = zwl_wm_base_protocol_pong,
 };
 
-struct zwl_wm_base *zwl_wm_base_create(struct wl_client *client, uint32_t version, uint32_t id)
+struct zwl_wm_base *zwl_wm_base_create(struct wl_client *client,
+                                       uint32_t version, uint32_t id)
 {
   UNUSED(version);
   struct zwl_wm_base *wm_base;
@@ -90,7 +96,8 @@ struct zwl_wm_base *zwl_wm_base_create(struct wl_client *client, uint32_t versio
     wl_client_post_no_memory(client);
     goto out_wm_base;
   }
-  wl_resource_set_implementation(resource, &zwl_wm_base_interface, wm_base, zwl_wm_base_handle_destroy);
+  wl_resource_set_implementation(resource, &zwl_wm_base_interface, wm_base,
+                                 zwl_wm_base_handle_destroy);
 
   return wm_base;
 

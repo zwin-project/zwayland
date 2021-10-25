@@ -9,13 +9,16 @@ struct zwl_seat {
 };
 
 // nullable
-struct zwl_pointer* zwl_seat_get_pointer(struct zwl_seat* seat, struct wl_client* client);
+struct zwl_pointer* zwl_seat_get_pointer(struct zwl_seat* seat,
+                                         struct wl_client* client);
 
-struct zwl_pointer* zwl_seat_ensure_pointer(struct zwl_seat* seat, struct wl_client* client);
+struct zwl_pointer* zwl_seat_ensure_pointer(struct zwl_seat* seat,
+                                            struct wl_client* client);
 
 void zwl_seat_destroy_pointer(struct zwl_seat* seat, struct wl_client* client);
 
-void zwl_seat_send_capabilities(struct zwl_seat* seat, struct wl_client* client);
+void zwl_seat_send_capabilities(struct zwl_seat* seat,
+                                struct wl_client* client);
 
 struct zwl_seat* zwl_seat_create(struct wl_display* display);
 

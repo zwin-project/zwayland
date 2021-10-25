@@ -26,7 +26,7 @@ struct zwl_xdg_toplevel {
   struct zsurface_toplevel *zsurface_toplevel;
 };
 
-struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(struct wl_client *client, uint32_t id,
-                                                 struct zwl_xdg_surface *xdg_surface);
+struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(
+    struct wl_client *client, uint32_t id, struct zwl_xdg_surface *xdg_surface);
 
 #endif  //  ZWAYLAND_XDG_TOPLEVEL_H

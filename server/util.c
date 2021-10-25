@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <wayland-server.h>
 
-static void zwl_week_pointer_handle_destroy_signal_handler(struct wl_listener* listener, void* data)
+static void zwl_week_pointer_handle_destroy_signal_handler(
+    struct wl_listener* listener, void* data)
 {
   UNUSED(data);
   struct zwl_week_ref* ref;
@@ -25,9 +26,13 @@ void zwl_week_ref_init(struct zwl_week_ref* ref)
   ref->destroy_func = NULL;
 }
 
-void zwl_week_ref_destroy(struct zwl_week_ref* ref) { wl_list_remove(&ref->destroy_listener.link); }
+void zwl_week_ref_destroy(struct zwl_week_ref* ref)
+{
+  wl_list_remove(&ref->destroy_listener.link);
+}
 
-void zwl_week_ref_set_data(struct zwl_week_ref* ref, void* data, struct wl_signal* destroy_signal,
+void zwl_week_ref_set_data(struct zwl_week_ref* ref, void* data,
+                           struct wl_signal* destroy_signal,
                            zwl_week_ref_destroy_func_t on_destroy)
 {
   wl_list_remove(&ref->destroy_listener.link);

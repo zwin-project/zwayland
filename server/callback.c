@@ -34,7 +34,8 @@ struct zwl_callback* zwl_callback_create(struct wl_client* client, uint32_t id)
 
   callback->resource = resource;
 
-  wl_resource_set_implementation(resource, NULL, callback, zwl_callback_handle_destroy);
+  wl_resource_set_implementation(resource, NULL, callback,
+                                 zwl_callback_handle_destroy);
 
   return callback;
 
@@ -45,4 +46,7 @@ out:
   return NULL;
 }
 
-static void zwl_callback_destroy(struct zwl_callback* callback) { free(callback); }
+static void zwl_callback_destroy(struct zwl_callback* callback)
+{
+  free(callback);
+}

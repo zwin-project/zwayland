@@ -23,7 +23,8 @@ static void zwl_compositor_handle_destroy(struct wl_resource *resource)
   zwl_compositor_destroy(compositor);
 }
 
-static void zwl_compositor_protocol_create_surface(struct wl_client *client, struct wl_resource *resource,
+static void zwl_compositor_protocol_create_surface(struct wl_client *client,
+                                                   struct wl_resource *resource,
                                                    uint32_t id)
 {
   struct zwl_compositor *compositor;
@@ -35,7 +36,8 @@ static void zwl_compositor_protocol_create_surface(struct wl_client *client, str
   if (surface == NULL) fprintf(stderr, "failed to create a surface\n");
 }
 
-static void zwl_compositor_protocol_create_region(struct wl_client *client, struct wl_resource *resource,
+static void zwl_compositor_protocol_create_region(struct wl_client *client,
+                                                  struct wl_resource *resource,
                                                   uint32_t id)
 {
   UNUSED(resource);
@@ -51,7 +53,8 @@ static const struct wl_compositor_interface zwl_compositor_interface = {
     .create_region = zwl_compositor_protocol_create_region,
 };
 
-static void zwl_compositor_global_flush_handler(struct wl_listener *listener, void *data)
+static void zwl_compositor_global_flush_handler(struct wl_listener *listener,
+                                                void *data)
 {
   UNUSED(data);
   struct zwl_compositor *compositor;
@@ -69,12 +72,14 @@ static int zwl_compositor_zsurface_dispatch(int fd, uint32_t mask, void *data)
 
   while (zsurface_prepare_read(compositor->zsurface) == -1) {
     if (errno != EAGAIN) {
-      wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_IMPLEMENTATION,
+      wl_resource_post_error(compositor->resource,
+                             WL_DISPLAY_ERROR_IMPLEMENTATION,
                              "failed to prepare to read zsurface event");
       return -1;
     }
     if (zsurface_dispatch_pending(compositor->zsurface) == -1) {
-      wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_IMPLEMENTATION,
+      wl_resource_post_error(compositor->resource,
+                             WL_DISPLAY_ERROR_IMPLEMENTATION,
                              "failed to dispatch zsurface pending event");
       return -1;
     }
@@ -83,20 +88,23 @@ static int zwl_compositor_zsurface_dispatch(int fd, uint32_t mask, void *data)
   while (zsurface_flush(compositor->zsurface) == -1) {
     if (errno != EAGAIN) {
       zsurface_cancel_read(compositor->zsurface);
-      wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_IMPLEMENTATION,
+      wl_resource_post_error(compositor->resource,
+                             WL_DISPLAY_ERROR_IMPLEMENTATION,
                              "failed to flush zsurface request");
       return -1;
     }
   }
 
   if (zsurface_read_events(compositor->zsurface) == -1) {
-    wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_IMPLEMENTATION,
+    wl_resource_post_error(compositor->resource,
+                           WL_DISPLAY_ERROR_IMPLEMENTATION,
                            "failed to read zsurface event");
     return -1;
   }
 
   if (zsurface_dispatch_pending(compositor->zsurface) == -1) {
-    wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_IMPLEMENTATION,
+    wl_resource_post_error(compositor->resource,
+                           WL_DISPLAY_ERROR_IMPLEMENTATION,
                            "failed to dispatch zsurface pending event");
     return -1;
   }
@@ -104,7 +112,8 @@ static int zwl_compositor_zsurface_dispatch(int fd, uint32_t mask, void *data)
   return 0;
 }
 
-static void zwl_compositor_handle_seat_capabilities(void *data, struct zsurface *surface,
+static void zwl_compositor_handle_seat_capabilities(void *data,
+                                                    struct zsurface *surface,
                                                     uint32_t capabilities)
 {
   UNUSED(surface);
@@ -116,7 +125,8 @@ static void zwl_compositor_handle_seat_capabilities(void *data, struct zsurface 
     struct zwl_pointer *pointer;
     pointer = zwl_seat_ensure_pointer(seat, client);
     if (pointer == NULL)
-      wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_NO_MEMORY, "failed to create a pointer");
+      wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_NO_MEMORY,
+                             "failed to create a pointer");
   } else if (!(capabilities & WL_SEAT_CAPABILITY_POINTER)) {
     zwl_seat_destroy_pointer(seat, client);
   }
@@ -126,23 +136,27 @@ static void zwl_compositor_handle_seat_capabilities(void *data, struct zsurface 
   zwl_seat_send_capabilities(seat, client);
 }
 
-static void zwl_compositor_handle_pointer_enter(void *data, struct zsurface_view *view, uint32_t x,
-                                                uint32_t y)
+static void zwl_compositor_handle_pointer_enter(void *data,
+                                                struct zsurface_view *view,
+                                                uint32_t x, uint32_t y)
 {
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
-  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_pointer *pointer =
+      zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
   struct zwl_surface *surface = zsurface_view_get_user_data(view);
   if (surface == NULL || pointer == NULL) return;
 
   zwl_pointer_send_enter(pointer, surface, x, y);
 }
 
-static void zwl_compositor_handle_pointer_motion(void *data, uint32_t x, uint32_t y)
+static void zwl_compositor_handle_pointer_motion(void *data, uint32_t x,
+                                                 uint32_t y)
 {
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
-  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_pointer *pointer =
+      zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
   if (pointer == NULL) return;
 
   zwl_pointer_send_motion(pointer, x, y);
@@ -152,18 +166,21 @@ static void zwl_compositor_handle_leave(void *data, struct zsurface_view *view)
 {
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
-  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_pointer *pointer =
+      zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
   struct zwl_surface *surface = zsurface_view_get_user_data(view);
   if (surface == NULL || pointer == NULL) return;
 
   zwl_pointer_send_leave(pointer, surface);
 }
 
-static void zwl_compositor_handle_button(void *data, uint32_t button, uint32_t state)
+static void zwl_compositor_handle_button(void *data, uint32_t button,
+                                         uint32_t state)
 {
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
-  struct zwl_pointer *pointer = zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_pointer *pointer =
+      zwl_seat_get_pointer(seat, wl_resource_get_client(compositor->resource));
   if (pointer == NULL) return;
 
   zwl_pointer_send_button(pointer, button, state);
@@ -177,8 +194,9 @@ static const struct zsurface_interface zsurface_interface = {
     .pointer_button = zwl_compositor_handle_button,
 };
 
-struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t version, uint32_t id,
-                                             struct zwl_compositor_global *compositor_global)
+struct zwl_compositor *zwl_compositor_create(
+    struct wl_client *client, uint32_t version, uint32_t id,
+    struct zwl_compositor_global *compositor_global)
 {
   UNUSED(compositor_global);
   struct zwl_compositor *compositor;
@@ -192,14 +210,16 @@ struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t 
     goto out;
   }
 
-  compositor->zsurface = zsurface_create("z11-0", compositor, &zsurface_interface);
+  compositor->zsurface =
+      zsurface_create("z11-0", compositor, &zsurface_interface);
   if (compositor->zsurface == NULL) {
     wl_client_post_no_memory(client);
     goto out_compositor;
   }
 
   if (zsurface_check_globals(compositor->zsurface) != 0) {
-    wl_client_post_implementation_error(client, "the compositor does not support the needed protocols");
+    wl_client_post_implementation_error(
+        client, "the compositor does not support the needed protocols");
     goto out_zsurface;
   }
 
@@ -209,8 +229,8 @@ struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t 
     goto out_zsurface;
   }
 
-  wl_resource_set_implementation(resource, &zwl_compositor_interface, compositor,
-                                 zwl_compositor_handle_destroy);
+  wl_resource_set_implementation(resource, &zwl_compositor_interface,
+                                 compositor, zwl_compositor_handle_destroy);
 
   compositor->resource = resource;
   compositor->display = compositor_global->display;
@@ -220,10 +240,13 @@ struct zwl_compositor *zwl_compositor_create(struct wl_client *client, uint32_t 
   fd = zsurface_get_fd(compositor->zsurface);
 
   compositor->event_source =
-      wl_event_loop_add_fd(loop, fd, WL_EVENT_READABLE, zwl_compositor_zsurface_dispatch, compositor);
+      wl_event_loop_add_fd(loop, fd, WL_EVENT_READABLE,
+                           zwl_compositor_zsurface_dispatch, compositor);
 
-  compositor->global_flush_listener.notify = zwl_compositor_global_flush_handler;
-  wl_signal_add(&compositor_global->flush_signal, &compositor->global_flush_listener);
+  compositor->global_flush_listener.notify =
+      zwl_compositor_global_flush_handler;
+  wl_signal_add(&compositor_global->flush_signal,
+                &compositor->global_flush_listener);
 
   wl_signal_init(&compositor->destroy_signal);
 

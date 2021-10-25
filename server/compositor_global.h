@@ -11,6 +11,7 @@ struct zwl_compositor_global {
   struct zwl_seat *seat;
 };
 
-struct zwl_compositor_global *zwl_compositor_global_create(struct wl_display *display);
+struct zwl_compositor_global *zwl_compositor_global_create(
+    struct wl_display *display);
 
 #endif  //  ZWAYLAND_COMPOSITOR_GLOBAL_H

@@ -18,13 +18,16 @@ static void zwl_surface_handle_destroy(struct wl_resource *resource)
   zwl_surface_destroy(surface);
 }
 
-static void zwl_surface_protocol_destory(struct wl_client *client, struct wl_resource *resource)
+static void zwl_surface_protocol_destory(struct wl_client *client,
+                                         struct wl_resource *resource)
 {
   UNUSED(client);
   wl_resource_destroy(resource);
 }
-static void zwl_surface_protocol_attach(struct wl_client *client, struct wl_resource *resource,
-                                        struct wl_resource *buffer_resource, int32_t x, int32_t y)
+static void zwl_surface_protocol_attach(struct wl_client *client,
+                                        struct wl_resource *resource,
+                                        struct wl_resource *buffer_resource,
+                                        int32_t x, int32_t y)
 {
   UNUSED(client);
   UNUSED(x);
@@ -39,8 +42,10 @@ static void zwl_surface_protocol_attach(struct wl_client *client, struct wl_reso
   // TODO: implement more
 }
 
-static void zwl_surface_protocol_damage(struct wl_client *client, struct wl_resource *resource, int32_t x,
-                                        int32_t y, int32_t width, int32_t height)
+static void zwl_surface_protocol_damage(struct wl_client *client,
+                                        struct wl_resource *resource, int32_t x,
+                                        int32_t y, int32_t width,
+                                        int32_t height)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -51,7 +56,8 @@ static void zwl_surface_protocol_damage(struct wl_client *client, struct wl_reso
   // TODO: implement
 }
 
-static void zwl_surface_protocol_frame(struct wl_client *client, struct wl_resource *resource,
+static void zwl_surface_protocol_frame(struct wl_client *client,
+                                       struct wl_resource *resource,
                                        uint32_t callback_id)
 {
   struct zwl_surface *surface = wl_resource_get_user_data(resource);
@@ -64,7 +70,8 @@ static void zwl_surface_protocol_frame(struct wl_client *client, struct wl_resou
   wl_signal_emit(&surface->frame_signal, callback);
 }
 
-static void zwl_surface_protocol_set_opaque_region(struct wl_client *client, struct wl_resource *resource,
+static void zwl_surface_protocol_set_opaque_region(struct wl_client *client,
+                                                   struct wl_resource *resource,
                                                    struct wl_resource *region)
 {
   UNUSED(client);
@@ -73,7 +80,8 @@ static void zwl_surface_protocol_set_opaque_region(struct wl_client *client, str
   // TODO: implement
 }
 
-static void zwl_surface_protocol_set_input_region(struct wl_client *client, struct wl_resource *resource,
+static void zwl_surface_protocol_set_input_region(struct wl_client *client,
+                                                  struct wl_resource *resource,
                                                   struct wl_resource *region)
 {
   UNUSED(client);
@@ -82,7 +90,8 @@ static void zwl_surface_protocol_set_input_region(struct wl_client *client, stru
   // TODO: implement
 }
 
-static void zwl_surface_protocol_commit(struct wl_client *client, struct wl_resource *resource)
+static void zwl_surface_protocol_commit(struct wl_client *client,
+                                        struct wl_resource *resource)
 {
   UNUSED(client);
   struct zwl_surface *surface;
@@ -92,8 +101,8 @@ static void zwl_surface_protocol_commit(struct wl_client *client, struct wl_reso
   wl_signal_emit(&surface->commit_signal, NULL);
 }
 
-static void zwl_surface_protocol_set_buffer_transform(struct wl_client *client, struct wl_resource *resource,
-                                                      int32_t transform)
+static void zwl_surface_protocol_set_buffer_transform(
+    struct wl_client *client, struct wl_resource *resource, int32_t transform)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -101,7 +110,8 @@ static void zwl_surface_protocol_set_buffer_transform(struct wl_client *client, 
   // TODO: implement
 }
 
-static void zwl_surface_protocol_set_buffer_scale(struct wl_client *client, struct wl_resource *resource,
+static void zwl_surface_protocol_set_buffer_scale(struct wl_client *client,
+                                                  struct wl_resource *resource,
                                                   int32_t scale)
 {
   UNUSED(client);
@@ -110,8 +120,10 @@ static void zwl_surface_protocol_set_buffer_scale(struct wl_client *client, stru
   // TODO: implement
 }
 
-static void zwl_surface_protocol_damage_buffer(struct wl_client *client, struct wl_resource *resource,
-                                               int32_t x, int32_t y, int32_t width, int32_t height)
+static void zwl_surface_protocol_damage_buffer(struct wl_client *client,
+                                               struct wl_resource *resource,
+                                               int32_t x, int32_t y,
+                                               int32_t width, int32_t height)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -135,7 +147,8 @@ static const struct wl_surface_interface zwl_surface_interface = {
     .damage_buffer = zwl_surface_protocol_damage_buffer,
 };
 
-static void zwl_surface_compositor_destroy_handler(struct wl_listener *listener, void *data)
+static void zwl_surface_compositor_destroy_handler(struct wl_listener *listener,
+                                                   void *data)
 {
   UNUSED(data);
   struct zwl_surface *surface;
@@ -162,7 +175,8 @@ struct zwl_surface *zwl_surface_create(struct wl_client *client, uint32_t id,
     wl_client_post_no_memory(client);
     goto out_surface;
   }
-  wl_resource_set_implementation(resource, &zwl_surface_interface, surface, zwl_surface_handle_destroy);
+  wl_resource_set_implementation(resource, &zwl_surface_interface, surface,
+                                 zwl_surface_handle_destroy);
 
   surface->resource = resource;
 
@@ -171,8 +185,10 @@ struct zwl_surface *zwl_surface_create(struct wl_client *client, uint32_t id,
   wl_signal_init(&surface->destroy_signal);
 
   surface->compositor = compositor;
-  surface->compositor_destroy_listener.notify = zwl_surface_compositor_destroy_handler;
-  wl_signal_add(&compositor->destroy_signal, &surface->compositor_destroy_listener);
+  surface->compositor_destroy_listener.notify =
+      zwl_surface_compositor_destroy_handler;
+  wl_signal_add(&compositor->destroy_signal,
+                &surface->compositor_destroy_listener);
 
   surface->pending.buffer_resource = NULL;
   // TODO: listen buffer resource destroy signal

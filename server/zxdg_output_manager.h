@@ -8,6 +8,7 @@
 struct zwl_zxdg_output_manager {};
 #pragma GCC diagnostic pop
 
-struct zwl_zxdg_output_manager *zwl_zxdg_output_manager_create(struct wl_display *display);
+struct zwl_zxdg_output_manager *zwl_zxdg_output_manager_create(
+    struct wl_display *display);
 
 #endif  //  ZWAYLAND_ZXDG_OUTPUT_MANAGER_H

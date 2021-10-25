@@ -15,7 +15,8 @@ static void zwl_keyboard_handle_destroy(struct wl_resource *resource)
   zwl_keyboard_destroy(keyboard);
 }
 
-static void zwl_keyboard_protocol_release(struct wl_client *client, struct wl_resource *resource)
+static void zwl_keyboard_protocol_release(struct wl_client *client,
+                                          struct wl_resource *resource)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -42,7 +43,8 @@ struct zwl_keyboard *zwl_keyboard_create(struct wl_client *client, uint32_t id)
     goto out_keyboard;
   }
 
-  wl_resource_set_implementation(resource, &zwl_keyboard_interface, keyboard, zwl_keyboard_handle_destroy);
+  wl_resource_set_implementation(resource, &zwl_keyboard_interface, keyboard,
+                                 zwl_keyboard_handle_destroy);
 
   return keyboard;
 
@@ -53,4 +55,7 @@ out:
   return NULL;
 }
 
-static void zwl_keyboard_destroy(struct zwl_keyboard *keyboard) { free(keyboard); }
+static void zwl_keyboard_destroy(struct zwl_keyboard *keyboard)
+{
+  free(keyboard);
+}

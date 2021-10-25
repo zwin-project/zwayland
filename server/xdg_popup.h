@@ -10,7 +10,8 @@
 struct zwl_xdg_popup {};
 #pragma GCC diagnostic pop
 
-struct zwl_xdg_popup *zwl_xdg_popup_create(struct wl_client *client, uint32_t id,
+struct zwl_xdg_popup *zwl_xdg_popup_create(struct wl_client *client,
+                                           uint32_t id,
                                            struct zwl_xdg_surface *xdg_surface);
 
 #endif  //  WAYLAND_XDG_POPUP_H
