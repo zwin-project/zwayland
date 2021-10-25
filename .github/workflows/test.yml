@@ -24,7 +24,7 @@ jobs:
           python-version: "3.x"
       - run: pip install meson ninja
 
-      - run: meson -Ddocumentation=false -Dtests=false -Ddtd_validation=false -Dicon_directory=false --prefix=$(pwd)/target build
+      - run: meson --prefix=$(pwd)/target build
         working-directory: ./zsurface
 
       - run: ninja -C build install
