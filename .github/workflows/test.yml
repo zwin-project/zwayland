@@ -1,0 +1,47 @@
+name: meson_test
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update &&
+          sudo apt-get install libwayland-dev
+      - uses: actions/checkout@v2
+        with:
+          path: main
+      - uses: actions/checkout@v2
+        with:
+          repository: gray-armor/zsurface
+          path: zsurface
+      - uses: actions/setup-python@v1
+        with:
+          python-version: "3.x"
+      - run: pip install meson ninja
+
+      - run: meson -Ddocumentation=false -Dtests=false -Ddtd_validation=false -Dicon_directory=false --prefix=$(pwd)/target build
+        working-directory: ./zsurface
+
+      - run: ninja -C build install
+        working-directory: ./zsurface
+
+      - run: |
+          echo "PKG_CONFIG_PATH=$GITHUB_WORKSPACE/zsurface/target/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+
+      - run: |
+          meson build
+        working-directory: ./main
+
+      - run: ninja -C build test
+        working-directory: ./main
+
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: Test_Log
+          path: main/build/meson-logs/testlog.txt
