@@ -7,9 +7,9 @@
 #include "surface.h"
 #include "util.h"
 
-static void zwl_pointer_protocol_set_cursor(struct wl_client *client, struct wl_resource *resource,
-                                            uint32_t serial, struct wl_resource *surface, int32_t hotspot_x,
-                                            int32_t hotspot_y)
+static void zwl_pointer_protocol_set_cursor(
+    struct wl_client *client, struct wl_resource *resource, uint32_t serial,
+    struct wl_resource *surface, int32_t hotspot_x, int32_t hotspot_y)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -19,7 +19,8 @@ static void zwl_pointer_protocol_set_cursor(struct wl_client *client, struct wl_
   UNUSED(hotspot_y);
 }
 
-static void zwl_pointer_protocol_release(struct wl_client *client, struct wl_resource *resource)
+static void zwl_pointer_protocol_release(struct wl_client *client,
+                                         struct wl_resource *resource)
 {
   UNUSED(client);
   wl_resource_destroy(resource);
@@ -30,7 +31,8 @@ static const struct wl_pointer_interface zwl_pointer_interface = {
     .release = zwl_pointer_protocol_release,
 };
 
-void zwl_pointer_send_enter(struct zwl_pointer *pointer, struct zwl_surface *surface, uint32_t x, uint32_t y)
+void zwl_pointer_send_enter(struct zwl_pointer *pointer,
+                            struct zwl_surface *surface, uint32_t x, uint32_t y)
 {
   struct wl_resource *resource;
   struct wl_display *display = wl_client_get_display(pointer->client);
@@ -38,11 +40,13 @@ void zwl_pointer_send_enter(struct zwl_pointer *pointer, struct zwl_surface *sur
 
   wl_resource_for_each(resource, &pointer->resource_list)
   {
-    wl_pointer_send_enter(resource, serial, surface->resource, wl_fixed_from_int(x), wl_fixed_from_int(y));
+    wl_pointer_send_enter(resource, serial, surface->resource,
+                          wl_fixed_from_int(x), wl_fixed_from_int(y));
   }
 }
 
-void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t x, uint32_t y)
+void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t x,
+                             uint32_t y)
 {
   struct wl_resource *resource;
   struct timeval tv;
@@ -53,11 +57,13 @@ void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t x, uint32_t y
 
   wl_resource_for_each(resource, &pointer->resource_list)
   {
-    wl_pointer_send_motion(resource, current_time_in_milles, wl_fixed_from_int(x), wl_fixed_from_int(y));
+    wl_pointer_send_motion(resource, current_time_in_milles,
+                           wl_fixed_from_int(x), wl_fixed_from_int(y));
   }
 }
 
-void zwl_pointer_send_leave(struct zwl_pointer *pointer, struct zwl_surface *surface)
+void zwl_pointer_send_leave(struct zwl_pointer *pointer,
+                            struct zwl_surface *surface)
 {
   struct wl_resource *resource;
   struct wl_display *display = wl_client_get_display(pointer->client);
@@ -69,7 +75,8 @@ void zwl_pointer_send_leave(struct zwl_pointer *pointer, struct zwl_surface *sur
   }
 }
 
-void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t button, uint32_t state)
+void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t button,
+                             uint32_t state)
 {
   struct wl_resource *resource;
   struct wl_display *display = wl_client_get_display(pointer->client);
@@ -82,7 +89,8 @@ void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t button, uint3
 
   wl_resource_for_each(resource, &pointer->resource_list)
   {
-    wl_pointer_send_button(resource, serial, current_time_in_milles, button, state);
+    wl_pointer_send_button(resource, serial, current_time_in_milles, button,
+                           state);
   }
 }
 
@@ -91,7 +99,8 @@ static void zwl_pointer_handle_destroy(struct wl_resource *resource)
   wl_list_remove(wl_resource_get_link(resource));
 }
 
-struct wl_resource *zwl_pointer_add_resource(struct zwl_pointer *pointer, struct wl_client *client,
+struct wl_resource *zwl_pointer_add_resource(struct zwl_pointer *pointer,
+                                             struct wl_client *client,
                                              uint32_t id)
 {
   struct wl_resource *resource;
@@ -104,12 +113,14 @@ struct wl_resource *zwl_pointer_add_resource(struct zwl_pointer *pointer, struct
 
   wl_list_insert(&pointer->resource_list, wl_resource_get_link(resource));
 
-  wl_resource_set_implementation(resource, &zwl_pointer_interface, pointer, zwl_pointer_handle_destroy);
+  wl_resource_set_implementation(resource, &zwl_pointer_interface, pointer,
+                                 zwl_pointer_handle_destroy);
 
   return resource;
 }
 
-static void zwl_pointer_client_destroy_handler(struct wl_listener *listener, void *data)
+static void zwl_pointer_client_destroy_handler(struct wl_listener *listener,
+                                               void *data)
 {
   UNUSED(data);
   struct zwl_pointer *pointer;
@@ -119,7 +130,8 @@ static void zwl_pointer_client_destroy_handler(struct wl_listener *listener, voi
   zwl_pointer_destroy(pointer);
 }
 
-struct zwl_pointer *zwl_pointer_create(struct wl_client *client, struct zwl_seat *seat)
+struct zwl_pointer *zwl_pointer_create(struct wl_client *client,
+                                       struct zwl_seat *seat)
 {
   struct zwl_pointer *pointer;
 

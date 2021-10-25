@@ -15,13 +15,15 @@ static void zwl_region_handle_destroy(struct wl_resource* resource)
   zwl_region_destroy(region);
 }
 
-static void zwl_region_protocol_destroy(struct wl_client* client, struct wl_resource* resource)
+static void zwl_region_protocol_destroy(struct wl_client* client,
+                                        struct wl_resource* resource)
 {
   UNUSED(client);
   wl_resource_destroy(resource);
 }
 
-static void zwl_region_protocol_add(struct wl_client* client, struct wl_resource* resource, int32_t x,
+static void zwl_region_protocol_add(struct wl_client* client,
+                                    struct wl_resource* resource, int32_t x,
                                     int32_t y, int32_t width, int32_t height)
 {
   UNUSED(client);
@@ -32,8 +34,10 @@ static void zwl_region_protocol_add(struct wl_client* client, struct wl_resource
   UNUSED(height);
 }
 
-static void zwl_region_protocol_subtract(struct wl_client* client, struct wl_resource* resource, int32_t x,
-                                         int32_t y, int32_t width, int32_t height)
+static void zwl_region_protocol_subtract(struct wl_client* client,
+                                         struct wl_resource* resource,
+                                         int32_t x, int32_t y, int32_t width,
+                                         int32_t height)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -66,7 +70,8 @@ struct zwl_region* zwl_region_create(struct wl_client* client, uint32_t id)
     goto out_region;
   }
 
-  wl_resource_set_implementation(resource, &zwl_region_interface, region, zwl_region_handle_destroy);
+  wl_resource_set_implementation(resource, &zwl_region_interface, region,
+                                 zwl_region_handle_destroy);
 
   return region;
 

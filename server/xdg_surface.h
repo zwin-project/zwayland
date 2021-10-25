@@ -18,7 +18,8 @@ struct zwl_xdg_surface {
   struct wl_signal set_window_geometry_signal;
 };
 
-struct zwl_xdg_surface *zwl_xdg_surface_create(struct wl_client *client, uint32_t id,
+struct zwl_xdg_surface *zwl_xdg_surface_create(struct wl_client *client,
+                                               uint32_t id,
                                                struct zwl_surface *surface);
 
 void zwl_xdg_surface_configure(struct zwl_xdg_surface *xdg_surface);

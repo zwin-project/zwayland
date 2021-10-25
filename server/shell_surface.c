@@ -18,7 +18,8 @@ static void zwl_shell_surface_handle_destroy(struct wl_resource *resource)
   zwl_shell_surface_destroy(shell_surface);
 }
 
-static void zwl_shell_surface_protocol_pong(struct wl_client *client, struct wl_resource *resource,
+static void zwl_shell_surface_protocol_pong(struct wl_client *client,
+                                            struct wl_resource *resource,
                                             uint32_t serial)
 {
   UNUSED(client);
@@ -26,8 +27,10 @@ static void zwl_shell_surface_protocol_pong(struct wl_client *client, struct wl_
   UNUSED(serial);
 }
 
-static void zwl_shell_surface_protocol_move(struct wl_client *client, struct wl_resource *resource,
-                                            struct wl_resource *seat, uint32_t serial)
+static void zwl_shell_surface_protocol_move(struct wl_client *client,
+                                            struct wl_resource *resource,
+                                            struct wl_resource *seat,
+                                            uint32_t serial)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -35,8 +38,10 @@ static void zwl_shell_surface_protocol_move(struct wl_client *client, struct wl_
   UNUSED(serial);
 }
 
-static void zwl_shell_surface_protocol_resize(struct wl_client *client, struct wl_resource *resource,
-                                              struct wl_resource *seat, uint32_t serial, uint32_t edges)
+static void zwl_shell_surface_protocol_resize(struct wl_client *client,
+                                              struct wl_resource *resource,
+                                              struct wl_resource *seat,
+                                              uint32_t serial, uint32_t edges)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -45,7 +50,8 @@ static void zwl_shell_surface_protocol_resize(struct wl_client *client, struct w
   UNUSED(edges);
 }
 
-static void zwl_shell_surface_protocol_set_toplevel(struct wl_client *client, struct wl_resource *resource)
+static void zwl_shell_surface_protocol_set_toplevel(
+    struct wl_client *client, struct wl_resource *resource)
 {
   UNUSED(client);
   struct zwl_shell_surface *shell_surface;
@@ -55,9 +61,9 @@ static void zwl_shell_surface_protocol_set_toplevel(struct wl_client *client, st
   shell_surface->role = toplevel;
 }
 
-static void zwl_shell_surface_protocol_set_transient(struct wl_client *client, struct wl_resource *resource,
-                                                     struct wl_resource *parent, int32_t x, int32_t y,
-                                                     uint32_t flags)
+static void zwl_shell_surface_protocol_set_transient(
+    struct wl_client *client, struct wl_resource *resource,
+    struct wl_resource *parent, int32_t x, int32_t y, uint32_t flags)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -67,9 +73,9 @@ static void zwl_shell_surface_protocol_set_transient(struct wl_client *client, s
   UNUSED(flags);
 }
 
-static void zwl_shell_surface_protocol_set_fullscreen(struct wl_client *client, struct wl_resource *resource,
-                                                      uint32_t method, uint32_t framerate,
-                                                      struct wl_resource *output)
+static void zwl_shell_surface_protocol_set_fullscreen(
+    struct wl_client *client, struct wl_resource *resource, uint32_t method,
+    uint32_t framerate, struct wl_resource *output)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -78,10 +84,10 @@ static void zwl_shell_surface_protocol_set_fullscreen(struct wl_client *client, 
   UNUSED(output);
 }
 
-static void zwl_shell_surface_protocol_set_popup(struct wl_client *client, struct wl_resource *resource,
-                                                 struct wl_resource *seat, uint32_t serial,
-                                                 struct wl_resource *parent, int32_t x, int32_t y,
-                                                 uint32_t flags)
+static void zwl_shell_surface_protocol_set_popup(
+    struct wl_client *client, struct wl_resource *resource,
+    struct wl_resource *seat, uint32_t serial, struct wl_resource *parent,
+    int32_t x, int32_t y, uint32_t flags)
 {
   UNUSED(client);
   UNUSED(seat);
@@ -97,15 +103,17 @@ static void zwl_shell_surface_protocol_set_popup(struct wl_client *client, struc
   shell_surface->role = popup;
 }
 
-static void zwl_shell_surface_protocol_set_maximaized(struct wl_client *client, struct wl_resource *resource,
-                                                      struct wl_resource *output)
+static void zwl_shell_surface_protocol_set_maximaized(
+    struct wl_client *client, struct wl_resource *resource,
+    struct wl_resource *output)
 {
   UNUSED(client);
   UNUSED(resource);
   UNUSED(output);
 }
 
-static void zwl_shell_surface_protocol_set_title(struct wl_client *client, struct wl_resource *resource,
+static void zwl_shell_surface_protocol_set_title(struct wl_client *client,
+                                                 struct wl_resource *resource,
                                                  const char *title)
 {
   UNUSED(client);
@@ -113,7 +121,8 @@ static void zwl_shell_surface_protocol_set_title(struct wl_client *client, struc
   UNUSED(title);
 }
 
-static void zwl_shell_surface_protocol_set_class(struct wl_client *client, struct wl_resource *resource,
+static void zwl_shell_surface_protocol_set_class(struct wl_client *client,
+                                                 struct wl_resource *resource,
                                                  const char *class_)
 {
   UNUSED(client);
@@ -134,13 +143,15 @@ static const struct wl_shell_surface_interface zwl_shell_surface_interface = {
     .set_class = zwl_shell_surface_protocol_set_class,
 };
 
-static void zwl_shell_surface_surface_commit_handler(struct wl_listener *listener, void *data)
+static void zwl_shell_surface_surface_commit_handler(
+    struct wl_listener *listener, void *data)
 {
   UNUSED(data);
   struct zwl_shell_surface *shell_surface;
   struct zwl_surface *surface;
 
-  shell_surface = wl_container_of(listener, shell_surface, surface_commit_listener);
+  shell_surface =
+      wl_container_of(listener, shell_surface, surface_commit_listener);
   if (shell_surface->role != toplevel) {
     return;
   }
@@ -148,7 +159,8 @@ static void zwl_shell_surface_surface_commit_handler(struct wl_listener *listene
   surface = shell_surface->surface;
 
   if (surface->pending.buffer_resource != NULL) {
-    struct wl_shm_buffer *shm_buffer = wl_shm_buffer_get(surface->pending.buffer_resource);
+    struct wl_shm_buffer *shm_buffer =
+        wl_shm_buffer_get(surface->pending.buffer_resource);
     enum wl_shm_format format = wl_shm_buffer_get_format(shm_buffer);
     uint32_t stride = wl_shm_buffer_get_stride(shm_buffer);
     uint32_t width = wl_shm_buffer_get_width(shm_buffer);
@@ -164,10 +176,12 @@ static void zwl_shell_surface_surface_commit_handler(struct wl_listener *listene
     wl_shm_buffer_end_access(shm_buffer);
   }
 
-  if (surface->pending.buffer_resource != NULL) wl_buffer_send_release(surface->pending.buffer_resource);
+  if (surface->pending.buffer_resource != NULL)
+    wl_buffer_send_release(surface->pending.buffer_resource);
 }
 
-static void zwl_shell_surface_virtual_object_callback_done(void *data, uint32_t callback_time)
+static void zwl_shell_surface_virtual_object_callback_done(
+    void *data, uint32_t callback_time)
 {
   struct zwl_callback *callback = data;
 
@@ -175,12 +189,14 @@ static void zwl_shell_surface_virtual_object_callback_done(void *data, uint32_t 
   wl_resource_destroy(callback->resource);
 }
 
-static void zwl_shell_surface_surface_frame_handler(struct wl_listener *listener, void *data)
+static void zwl_shell_surface_surface_frame_handler(
+    struct wl_listener *listener, void *data)
 {
   struct zwl_callback *callback = data;
   struct zwl_shell_surface *shell_surface;
 
-  shell_surface = wl_container_of(listener, shell_surface, surface_frame_listener);
+  shell_surface =
+      wl_container_of(listener, shell_surface, surface_frame_listener);
 
   // TODO: implement
   (void)zwl_shell_surface_virtual_object_callback_done;
@@ -188,17 +204,20 @@ static void zwl_shell_surface_surface_frame_handler(struct wl_listener *listener
   (void)shell_surface;
 }
 
-static void zwl_shell_surface_surface_destroy_handler(struct wl_listener *listener, void *data)
+static void zwl_shell_surface_surface_destroy_handler(
+    struct wl_listener *listener, void *data)
 {
   UNUSED(data);
   struct zwl_shell_surface *shell_surface;
 
-  shell_surface = wl_container_of(listener, shell_surface, surface_destroy_listener);
+  shell_surface =
+      wl_container_of(listener, shell_surface, surface_destroy_listener);
 
   wl_resource_destroy(shell_surface->resource);
 }
 
-struct zwl_shell_surface *zwl_shell_surface_create(struct wl_client *client, uint32_t id,
+struct zwl_shell_surface *zwl_shell_surface_create(struct wl_client *client,
+                                                   uint32_t id,
                                                    struct zwl_surface *surface)
 {
   UNUSED(surface);
@@ -217,21 +236,28 @@ struct zwl_shell_surface *zwl_shell_surface_create(struct wl_client *client, uin
     goto out_shell_surface;
   }
 
-  wl_resource_set_implementation(resource, &zwl_shell_surface_interface, shell_surface,
+  wl_resource_set_implementation(resource, &zwl_shell_surface_interface,
+                                 shell_surface,
                                  zwl_shell_surface_handle_destroy);
 
   shell_surface->resource = resource;
   shell_surface->surface = surface;
   shell_surface->role = none;
 
-  shell_surface->surface_commit_listener.notify = zwl_shell_surface_surface_commit_handler;
-  wl_signal_add(&shell_surface->surface->commit_signal, &shell_surface->surface_commit_listener);
+  shell_surface->surface_commit_listener.notify =
+      zwl_shell_surface_surface_commit_handler;
+  wl_signal_add(&shell_surface->surface->commit_signal,
+                &shell_surface->surface_commit_listener);
 
-  shell_surface->surface_frame_listener.notify = zwl_shell_surface_surface_frame_handler;
-  wl_signal_add(&shell_surface->surface->frame_signal, &shell_surface->surface_frame_listener);
+  shell_surface->surface_frame_listener.notify =
+      zwl_shell_surface_surface_frame_handler;
+  wl_signal_add(&shell_surface->surface->frame_signal,
+                &shell_surface->surface_frame_listener);
 
-  shell_surface->surface_destroy_listener.notify = zwl_shell_surface_surface_destroy_handler;
-  wl_signal_add(&shell_surface->surface->destroy_signal, &shell_surface->surface_destroy_listener);
+  shell_surface->surface_destroy_listener.notify =
+      zwl_shell_surface_surface_destroy_handler;
+  wl_signal_add(&shell_surface->surface->destroy_signal,
+                &shell_surface->surface_destroy_listener);
 
   return shell_surface;
 

@@ -23,7 +23,8 @@ void zwl_week_ref_init(struct zwl_week_ref* week_ref);
 
 void zwl_week_ref_destroy(struct zwl_week_ref* ref);
 
-void zwl_week_ref_set_data(struct zwl_week_ref* ref, void* data, struct wl_signal* destroy_signal,
+void zwl_week_ref_set_data(struct zwl_week_ref* ref, void* data,
+                           struct wl_signal* destroy_signal,
                            zwl_week_ref_destroy_func_t on_destroy);
 
 #endif  // ZWAYLAND_UTIL_H

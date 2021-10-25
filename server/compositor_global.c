@@ -6,7 +6,8 @@
 #include "compositor.h"
 #include "util.h"
 
-static void zwl_compositor_global_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
+static void zwl_compositor_global_bind(struct wl_client *client, void *data,
+                                       uint32_t version, uint32_t id)
 {
   struct zwl_compositor_global *compositor_global = data;
   struct zwl_compositor *compositor;
@@ -17,7 +18,8 @@ static void zwl_compositor_global_bind(struct wl_client *client, void *data, uin
   }
 }
 
-struct zwl_compositor_global *zwl_compositor_global_create(struct wl_display *display)
+struct zwl_compositor_global *zwl_compositor_global_create(
+    struct wl_display *display)
 {
   struct zwl_compositor_global *compositor_global;
   struct wl_global *global;
@@ -25,8 +27,8 @@ struct zwl_compositor_global *zwl_compositor_global_create(struct wl_display *di
   compositor_global = zalloc(sizeof *compositor_global);
   if (compositor_global == NULL) goto out;
 
-  global =
-      wl_global_create(display, &wl_compositor_interface, 4, compositor_global, zwl_compositor_global_bind);
+  global = wl_global_create(display, &wl_compositor_interface, 4,
+                            compositor_global, zwl_compositor_global_bind);
   if (global == NULL) goto out_compositor;
 
   compositor_global->display = display;

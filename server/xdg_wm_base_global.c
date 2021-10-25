@@ -12,7 +12,8 @@
 struct zwl_wm_base_global {};
 #pragma GCC diagnostic pop
 
-static void zwl_wm_base_global_bind(struct wl_client *client, void *data, uint32_t version, uint32_t id)
+static void zwl_wm_base_global_bind(struct wl_client *client, void *data,
+                                    uint32_t version, uint32_t id)
 {
   UNUSED(data);
   struct zwl_wm_base *wm_base;
@@ -31,7 +32,8 @@ struct zwl_wm_base_global *zwl_wm_base_global_create(struct wl_display *display)
   wm_base_global = zalloc(sizeof *wm_base_global);
   if (wm_base_global == NULL) goto out;
 
-  global = wl_global_create(display, &xdg_wm_base_interface, 3, wm_base_global, zwl_wm_base_global_bind);
+  global = wl_global_create(display, &xdg_wm_base_interface, 3, wm_base_global,
+                            zwl_wm_base_global_bind);
   if (global == NULL) goto out_wm_base;
 
   return wm_base_global;

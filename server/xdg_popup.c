@@ -15,14 +15,17 @@ static void zwl_xdg_popup_handle_destroy(struct wl_resource *resource)
   zwl_xdg_popup_destroy(popup);
 }
 
-static void zwl_xdg_popup_protocol_destroy(struct wl_client *client, struct wl_resource *resource)
+static void zwl_xdg_popup_protocol_destroy(struct wl_client *client,
+                                           struct wl_resource *resource)
 {
   UNUSED(client);
   wl_resource_destroy(resource);
 }
 
-static void zwl_xdg_popup_protocol_grab(struct wl_client *client, struct wl_resource *resource,
-                                        struct wl_resource *seat, uint32_t serial)
+static void zwl_xdg_popup_protocol_grab(struct wl_client *client,
+                                        struct wl_resource *resource,
+                                        struct wl_resource *seat,
+                                        uint32_t serial)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -30,8 +33,10 @@ static void zwl_xdg_popup_protocol_grab(struct wl_client *client, struct wl_reso
   UNUSED(serial);
 }
 
-static void zwl_xdg_popup_protocol_reposition(struct wl_client *client, struct wl_resource *resource,
-                                              struct wl_resource *positioner, uint32_t token)
+static void zwl_xdg_popup_protocol_reposition(struct wl_client *client,
+                                              struct wl_resource *resource,
+                                              struct wl_resource *positioner,
+                                              uint32_t token)
 {
   UNUSED(client);
   UNUSED(resource);
@@ -45,7 +50,8 @@ static const struct xdg_popup_interface zwl_xdg_popup_interface = {
     .reposition = zwl_xdg_popup_protocol_reposition,
 };
 
-struct zwl_xdg_popup *zwl_xdg_popup_create(struct wl_client *client, uint32_t id,
+struct zwl_xdg_popup *zwl_xdg_popup_create(struct wl_client *client,
+                                           uint32_t id,
                                            struct zwl_xdg_surface *xdg_surface)
 {
   UNUSED(xdg_surface);
@@ -64,7 +70,8 @@ struct zwl_xdg_popup *zwl_xdg_popup_create(struct wl_client *client, uint32_t id
     goto out_popup;
   }
 
-  wl_resource_set_implementation(resource, &zwl_xdg_popup_interface, popup, zwl_xdg_popup_handle_destroy);
+  wl_resource_set_implementation(resource, &zwl_xdg_popup_interface, popup,
+                                 zwl_xdg_popup_handle_destroy);
 
   return popup;
 
