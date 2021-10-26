@@ -6,6 +6,7 @@
 #include <zsurface.h>
 
 #include "compositor_global.h"
+#include "keyboard.h"
 #include "pointer.h"
 #include "region.h"
 #include "seat.h"
@@ -131,7 +132,15 @@ static void zwl_compositor_handle_seat_capabilities(void *data,
     zwl_seat_destroy_pointer(seat, client);
   }
 
-  // handle keyboard
+  if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
+    struct zwl_keyboard *keyboard;
+    keyboard = zwl_seat_ensure_keyboard(seat, client);
+    if (keyboard == NULL)
+      wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_NO_MEMORY,
+                             "failed to create a keyboard");
+  } else if (!(capabilities & WL_SEAT_CAPABILITY_KEYBOARD)) {
+    zwl_seat_destroy_keyboard(seat, client);
+  }
 
   zwl_seat_send_capabilities(seat, client);
 }
@@ -162,7 +171,8 @@ static void zwl_compositor_handle_pointer_motion(void *data, uint32_t x,
   zwl_pointer_send_motion(pointer, x, y);
 }
 
-static void zwl_compositor_handle_leave(void *data, struct zsurface_view *view)
+static void zwl_compositor_handle_pointer_leave(void *data,
+                                                struct zsurface_view *view)
 {
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
@@ -174,8 +184,8 @@ static void zwl_compositor_handle_leave(void *data, struct zsurface_view *view)
   zwl_pointer_send_leave(pointer, surface);
 }
 
-static void zwl_compositor_handle_button(void *data, uint32_t button,
-                                         uint32_t state)
+static void zwl_compositor_handle_pointer_button(void *data, uint32_t button,
+                                                 uint32_t state)
 {
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
@@ -186,12 +196,67 @@ static void zwl_compositor_handle_button(void *data, uint32_t button,
   zwl_pointer_send_button(pointer, button, state);
 }
 
+static void zwl_compositor_handle_keyboard_keymap(void *data, uint32_t format,
+                                                  int fd, uint32_t size)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_keyboard *keyboard =
+      zwl_seat_get_keyboard(seat, wl_resource_get_client(compositor->resource));
+  if (keyboard == NULL) return;
+
+  zwl_keyboard_send_keymap(keyboard, format, fd, size);
+}
+
+static void zwl_compositor_handle_keyboard_enter(void *data,
+                                                 struct zsurface_view *view,
+                                                 struct wl_array *keys)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_keyboard *keyboard =
+      zwl_seat_get_keyboard(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_surface *surface = zsurface_view_get_user_data(view);
+  if (surface == NULL || keyboard == NULL) return;
+
+  zwl_keyboard_send_enter(keyboard, surface, keys);
+}
+
+static void zwl_compositor_handle_keyboard_leave(void *data,
+                                                 struct zsurface_view *view)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_keyboard *keyboard =
+      zwl_seat_get_keyboard(seat, wl_resource_get_client(compositor->resource));
+  struct zwl_surface *surface = zsurface_view_get_user_data(view);
+  if (surface == NULL || keyboard == NULL) return;
+
+  zwl_keyboard_send_leave(keyboard, surface);
+}
+
+static void zwl_compositor_handle_keyboard_key(void *data, uint32_t key,
+                                               uint32_t state)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_keyboard *keyboard =
+      zwl_seat_get_keyboard(seat, wl_resource_get_client(compositor->resource));
+  if (keyboard == NULL) return;
+
+  zwl_keyboard_send_key(keyboard, key, state);
+}
+
 static const struct zsurface_interface zsurface_interface = {
     .seat_capability = zwl_compositor_handle_seat_capabilities,
     .pointer_enter = zwl_compositor_handle_pointer_enter,
     .pointer_motion = zwl_compositor_handle_pointer_motion,
-    .pointer_leave = zwl_compositor_handle_leave,
-    .pointer_button = zwl_compositor_handle_button,
+    .pointer_leave = zwl_compositor_handle_pointer_leave,
+    .pointer_button = zwl_compositor_handle_pointer_button,
+    .keyboard_keymap = zwl_compositor_handle_keyboard_keymap,
+    .keyboard_enter = zwl_compositor_handle_keyboard_enter,
+    .keyboard_leave = zwl_compositor_handle_keyboard_leave,
+    .keyboard_key = zwl_compositor_handle_keyboard_key,
 };
 
 struct zwl_compositor *zwl_compositor_create(

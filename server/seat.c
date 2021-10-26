@@ -20,6 +20,19 @@ struct zwl_pointer *zwl_seat_get_pointer(struct zwl_seat *seat,
   return NULL;
 }
 
+struct zwl_keyboard *zwl_seat_get_keyboard(struct zwl_seat *seat,
+                                           struct wl_client *client)
+{
+  struct zwl_keyboard *keyboard;
+
+  wl_list_for_each(keyboard, &seat->keyboard_list, link)
+  {
+    if (keyboard->client == client) return keyboard;
+  }
+
+  return NULL;
+}
+
 struct zwl_pointer *zwl_seat_ensure_pointer(struct zwl_seat *seat,
                                             struct wl_client *client)
 {
@@ -33,6 +46,19 @@ struct zwl_pointer *zwl_seat_ensure_pointer(struct zwl_seat *seat,
   return pointer;
 }
 
+struct zwl_keyboard *zwl_seat_ensure_keyboard(struct zwl_seat *seat,
+                                              struct wl_client *client)
+{
+  struct zwl_keyboard *keyboard;
+
+  keyboard = zwl_seat_get_keyboard(seat, client);
+  if (keyboard) return keyboard;
+
+  keyboard = zwl_keyboard_create(client, seat);
+
+  return keyboard;
+}
+
 void zwl_seat_destroy_pointer(struct zwl_seat *seat, struct wl_client *client)
 {
   struct zwl_pointer *pointer;
@@ -43,12 +69,24 @@ void zwl_seat_destroy_pointer(struct zwl_seat *seat, struct wl_client *client)
   zwl_pointer_destroy(pointer);
 }
 
+void zwl_seat_destroy_keyboard(struct zwl_seat *seat, struct wl_client *client)
+{
+  struct zwl_keyboard *keyboard;
+
+  keyboard = zwl_seat_get_keyboard(seat, client);
+  if (keyboard == NULL) return;
+
+  zwl_keyboard_destroy(keyboard);
+}
+
 void zwl_seat_send_capabilities(struct zwl_seat *seat, struct wl_client *client)
 {
   struct wl_resource *resource;
   uint32_t capabilities = 0;
   if (zwl_seat_get_pointer(seat, client))
     capabilities |= WL_SEAT_CAPABILITY_POINTER;
+  if (zwl_seat_get_keyboard(seat, client))
+    capabilities |= WL_SEAT_CAPABILITY_KEYBOARD;
 
   wl_resource_for_each(resource, &seat->resource_list)
   {
@@ -80,12 +118,18 @@ static void zwl_seat_protocol_get_keyboard(struct wl_client *client,
                                            struct wl_resource *resource,
                                            uint32_t id)
 {
-  UNUSED(resource);
-  struct zwl_keyboard *keyboard;
+  struct zwl_seat *seat = wl_resource_get_user_data(resource);
+  struct zwl_keyboard *keyboard = zwl_seat_get_keyboard(seat, client);
+  struct wl_resource *keyboard_resource;
 
-  keyboard = zwl_keyboard_create(client, id);
   if (keyboard == NULL) {
-    fprintf(stderr, "failed to create a keyboard\n");
+    keyboard_resource = wl_resource_create(client, NULL, 7, id);
+    if (keyboard_resource == NULL) wl_client_post_no_memory(client);
+    fprintf(stderr, "called get_keyboard but no keyboard capability\n");
+  } else {
+    keyboard_resource = zwl_keyboard_add_resource(keyboard, client, id);
+    if (keyboard_resource == NULL)
+      fprintf(stderr, "failed to create a keyboard resource\n");
   }
 }
 
@@ -151,6 +195,7 @@ struct zwl_seat *zwl_seat_create(struct wl_display *display)
   if (global == NULL) goto out_seat;
 
   wl_list_init(&seat->pointer_list);
+  wl_list_init(&seat->keyboard_list);
   wl_list_init(&seat->resource_list);
 
   return seat;
