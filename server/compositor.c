@@ -128,7 +128,7 @@ static void zwl_compositor_handle_seat_capabilities(void *data,
     if (pointer == NULL)
       wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_NO_MEMORY,
                              "failed to create a pointer");
-  } else if (!(capabilities & WL_SEAT_CAPABILITY_POINTER)) {
+  } else {
     zwl_seat_destroy_pointer(seat, client);
   }
 
@@ -138,7 +138,7 @@ static void zwl_compositor_handle_seat_capabilities(void *data,
     if (keyboard == NULL)
       wl_resource_post_error(compositor->resource, WL_DISPLAY_ERROR_NO_MEMORY,
                              "failed to create a keyboard");
-  } else if (!(capabilities & WL_SEAT_CAPABILITY_KEYBOARD)) {
+  } else {
     zwl_seat_destroy_keyboard(seat, client);
   }
 
