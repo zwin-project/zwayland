@@ -205,7 +205,9 @@ static void zwl_compositor_handle_keyboard_keymap(void *data, uint32_t format,
       zwl_seat_get_keyboard(seat, wl_resource_get_client(compositor->resource));
   if (keyboard == NULL) return;
 
-  zwl_keyboard_send_keymap(keyboard, format, fd, size);
+  keyboard->keymap_info.format = format;
+  keyboard->keymap_info.fd = fd;
+  keyboard->keymap_info.size = size;
 }
 
 static void zwl_compositor_handle_keyboard_enter(void *data,

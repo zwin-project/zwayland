@@ -130,6 +130,8 @@ static void zwl_seat_protocol_get_keyboard(struct wl_client *client,
     keyboard_resource = zwl_keyboard_add_resource(keyboard, client, id);
     if (keyboard_resource == NULL)
       fprintf(stderr, "failed to create a keyboard resource\n");
+
+    zwl_keyboard_send_keymap(keyboard, keyboard_resource);
   }
 }
 

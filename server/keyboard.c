@@ -19,15 +19,15 @@ static const struct wl_keyboard_interface zwl_keyboard_interface = {
     .release = zwl_keyboard_protocol_release,
 };
 
-void zwl_keyboard_send_keymap(struct zwl_keyboard *keyboard, uint32_t format,
-                              int fd, uint32_t size)
+void zwl_keyboard_send_keymap(struct zwl_keyboard *keyboard,
+                              struct wl_resource *resource)
 {
-  struct wl_resource *resource;
-
-  wl_resource_for_each(resource, &keyboard->resource_list)
-  {
-    wl_keyboard_send_keymap(resource, format, fd, size);
+  if (keyboard->keymap_info.fd == -1) {
+    return;
   }
+
+  wl_keyboard_send_keymap(resource, keyboard->keymap_info.format,
+                          keyboard->keymap_info.fd, keyboard->keymap_info.size);
 }
 
 void zwl_keyboard_send_enter(struct zwl_keyboard *keyboard,
@@ -128,6 +128,8 @@ struct zwl_keyboard *zwl_keyboard_create(struct wl_client *client,
 
   wl_list_init(&keyboard->resource_list);
   wl_list_insert(&seat->keyboard_list, &keyboard->link);
+
+  keyboard->keymap_info.fd = -1;
 
   return keyboard;
 
