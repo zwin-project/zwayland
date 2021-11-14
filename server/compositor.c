@@ -212,7 +212,8 @@ static void zwl_compositor_handle_keyboard_keymap(void *data, uint32_t format,
 
 static void zwl_compositor_handle_keyboard_enter(void *data,
                                                  struct zsurface_view *view,
-                                                 struct wl_array *keys)
+                                                 uint32_t *keys,
+                                                 uint32_t key_count)
 {
   struct zwl_compositor *compositor = data;
   struct zwl_seat *seat = compositor->compositor_global->seat;
@@ -221,7 +222,16 @@ static void zwl_compositor_handle_keyboard_enter(void *data,
   struct zwl_surface *surface = zsurface_view_get_user_data(view);
   if (surface == NULL || keyboard == NULL) return;
 
-  zwl_keyboard_send_enter(keyboard, surface, keys);
+  struct wl_array key_array = {0};
+  uint32_t *key;
+
+  wl_array_init(&key_array);
+  for (uint32_t i = 0; i < key_count; i++) {
+    key = wl_array_add(&key_array, sizeof *key);
+    *key = keys[i];
+  }
+
+  zwl_keyboard_send_enter(keyboard, surface, &key_array);
 }
 
 static void zwl_compositor_handle_keyboard_leave(void *data,
