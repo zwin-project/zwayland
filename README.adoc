@@ -4,7 +4,7 @@ Wayland clients under Z11.
 
 == Build
 
-Build & install link:https://github.com/gray-armor/z11[Z11]
+Build & install link:https://github.com/zigen-project/zen[zen]
 
 Build & install link:https://github.com/gray-armor/zsurface[zsurface]
 
@@ -18,11 +18,11 @@ $ ninja -C build install
 
 == Run
 
-run z11 compositor first,
+run zigen compositor first,
 
 [source, console]
 ....
-$ XDG_RUNTIME_DIR=~/.xdg zazen -no-hmd
+$ XDG_RUNTIME_DIR=~/.xdg zen
 ....
 
 in another shell

@@ -23,16 +23,16 @@ struct wl_resource *zwl_pointer_add_resource(struct zwl_pointer *pointer,
                                              uint32_t id);
 
 void zwl_pointer_send_enter(struct zwl_pointer *pointer,
-                            struct zwl_surface *surface, uint32_t x,
-                            uint32_t y);
+                            struct zwl_surface *surface, wl_fixed_t x,
+                            wl_fixed_t y);
 
-void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t x,
-                             uint32_t y);
+void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t time,
+                             wl_fixed_t x, wl_fixed_t y);
 
 void zwl_pointer_send_leave(struct zwl_pointer *pointer,
                             struct zwl_surface *surface);
 
-void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t button,
-                             uint32_t state);
+void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t serial,
+                             uint32_t time, uint32_t button, uint32_t state);
 
 #endif  //  ZWAYLAND_POINTER_H
