@@ -23,7 +23,7 @@ struct zwl_xdg_toplevel {
   struct wl_listener surface_frame_listener;
   char *title;
 
-  struct zsurface_toplevel *zsurface_toplevel;
+  struct zsurf_toplevel *zsurface_toplevel;
 };
 
 struct zwl_xdg_toplevel *zwl_xdg_toplevel_create(
