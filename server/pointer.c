@@ -32,33 +32,29 @@ static const struct wl_pointer_interface zwl_pointer_interface = {
 };
 
 void zwl_pointer_send_enter(struct zwl_pointer *pointer,
-                            struct zwl_surface *surface, uint32_t x, uint32_t y)
+                            struct zwl_surface *surface, wl_fixed_t x,
+                            wl_fixed_t y)
 {
   struct wl_resource *resource;
   struct wl_display *display = wl_client_get_display(pointer->client);
+
+  // TODO: keep this value for set_cursor()
   uint32_t serial = wl_display_next_serial(display);
 
   wl_resource_for_each(resource, &pointer->resource_list)
   {
-    wl_pointer_send_enter(resource, serial, surface->resource,
-                          wl_fixed_from_int(x), wl_fixed_from_int(y));
+    wl_pointer_send_enter(resource, serial, surface->resource, x, y);
   }
 }
 
-void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t x,
-                             uint32_t y)
+void zwl_pointer_send_motion(struct zwl_pointer *pointer, uint32_t time,
+                             wl_fixed_t x, wl_fixed_t y)
 {
   struct wl_resource *resource;
-  struct timeval tv;
-  uint32_t current_time_in_milles;
-
-  gettimeofday(&tv, NULL);
-  current_time_in_milles = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
   wl_resource_for_each(resource, &pointer->resource_list)
   {
-    wl_pointer_send_motion(resource, current_time_in_milles,
-                           wl_fixed_from_int(x), wl_fixed_from_int(y));
+    wl_pointer_send_motion(resource, time, x, y);
   }
 }
 
@@ -75,22 +71,14 @@ void zwl_pointer_send_leave(struct zwl_pointer *pointer,
   }
 }
 
-void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t button,
-                             uint32_t state)
+void zwl_pointer_send_button(struct zwl_pointer *pointer, uint32_t serial,
+                             uint32_t time, uint32_t button, uint32_t state)
 {
   struct wl_resource *resource;
-  struct wl_display *display = wl_client_get_display(pointer->client);
-  uint32_t serial = wl_display_next_serial(display);
-  struct timeval tv;
-  uint32_t current_time_in_milles;
-
-  gettimeofday(&tv, NULL);
-  current_time_in_milles = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
   wl_resource_for_each(resource, &pointer->resource_list)
   {
-    wl_pointer_send_button(resource, serial, current_time_in_milles, button,
-                           state);
+    wl_pointer_send_button(resource, serial, time, button, state);
   }
 }
 

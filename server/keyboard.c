@@ -30,13 +30,10 @@ void zwl_keyboard_send_keymap(struct zwl_keyboard *keyboard,
                           keyboard->keymap_info.fd, keyboard->keymap_info.size);
 }
 
-void zwl_keyboard_send_enter(struct zwl_keyboard *keyboard,
+void zwl_keyboard_send_enter(struct zwl_keyboard *keyboard, uint32_t serial,
                              struct zwl_surface *surface, struct wl_array *keys)
 {
   struct wl_resource *resource;
-  uint32_t serial;
-
-  serial = wl_display_next_serial(wl_client_get_display(keyboard->client));
 
   wl_resource_for_each(resource, &keyboard->resource_list)
   {
@@ -44,13 +41,10 @@ void zwl_keyboard_send_enter(struct zwl_keyboard *keyboard,
   }
 }
 
-void zwl_keyboard_send_leave(struct zwl_keyboard *keyboard,
+void zwl_keyboard_send_leave(struct zwl_keyboard *keyboard, uint32_t serial,
                              struct zwl_surface *surface)
 {
   struct wl_resource *resource;
-  uint32_t serial;
-
-  serial = wl_display_next_serial(wl_client_get_display(keyboard->client));
 
   wl_resource_for_each(resource, &keyboard->resource_list)
   {
@@ -58,22 +52,14 @@ void zwl_keyboard_send_leave(struct zwl_keyboard *keyboard,
   }
 }
 
-void zwl_keyboard_send_key(struct zwl_keyboard *keyboard, uint32_t key,
-                           uint32_t state)
+void zwl_keyboard_send_key(struct zwl_keyboard *keyboard, uint32_t serial,
+                           uint32_t time, uint32_t key, uint32_t state)
 {
   struct wl_resource *resource;
-  uint32_t serial;
-  struct timeval tv;
-  uint32_t current_time_in_milles;
-
-  gettimeofday(&tv, NULL);
-  current_time_in_milles = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-
-  serial = wl_display_next_serial(wl_client_get_display(keyboard->client));
 
   wl_resource_for_each(resource, &keyboard->resource_list)
   {
-    wl_keyboard_send_key(resource, serial, current_time_in_milles, key, state);
+    wl_keyboard_send_key(resource, serial, time, key, state);
   }
 }
 

@@ -2,11 +2,12 @@
 #define ZWAYLAND_COMPOSITOR_H
 
 #include <wayland-server.h>
+#include <zsurface.h>
 
 #include "compositor_global.h"
 
 struct zwl_compositor {
-  struct zsurface *zsurface;
+  struct zsurf_display *surface_display;
   struct wl_resource *resource;
   struct wl_display *display;
   struct wl_listener global_flush_listener;

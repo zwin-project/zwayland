@@ -32,14 +32,14 @@ struct wl_resource *zwl_keyboard_add_resource(struct zwl_keyboard *keyboard,
 void zwl_keyboard_send_keymap(struct zwl_keyboard *keyboard,
                               struct wl_resource *resource);
 
-void zwl_keyboard_send_enter(struct zwl_keyboard *keyboard,
+void zwl_keyboard_send_enter(struct zwl_keyboard *keyboard, uint32_t serial,
                              struct zwl_surface *surface,
                              struct wl_array *keys);
 
-void zwl_keyboard_send_leave(struct zwl_keyboard *keyboard,
+void zwl_keyboard_send_leave(struct zwl_keyboard *keyboard, uint32_t serial,
                              struct zwl_surface *surface);
 
-void zwl_keyboard_send_key(struct zwl_keyboard *keyboard, uint32_t key,
-                           uint32_t state);
+void zwl_keyboard_send_key(struct zwl_keyboard *keyboard, uint32_t serial,
+                           uint32_t time, uint32_t key, uint32_t state);
 
 #endif  //  ZWAYLAND_KEYBOARD_H
