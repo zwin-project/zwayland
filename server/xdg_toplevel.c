@@ -82,10 +82,10 @@ static void zwl_xdg_toplevel_protocol_move(struct wl_client *client,
                                            uint32_t serial)
 {
   UNUSED(client);
-  UNUSED(resource);
   UNUSED(seat);
-  UNUSED(serial);
-  // TODO: implement
+  struct zwl_xdg_toplevel *toplevel = wl_resource_get_user_data(resource);
+
+  zsurf_toplevel_move(toplevel->zsurface_toplevel, serial);
 }
 
 static void zwl_xdg_toplevel_protocol_resize(struct wl_client *client,
