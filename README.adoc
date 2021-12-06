@@ -1,6 +1,6 @@
 = Z Wayland
 
-Wayland clients under Z11.
+Wayland clients under zigen.
 
 == Build
 
