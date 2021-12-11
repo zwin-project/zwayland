@@ -11,6 +11,15 @@ struct zwl_pointer {
   struct wl_client *client;
   struct wl_list resource_list;
   struct wl_listener client_destroy_listener;
+
+  struct {
+    struct wl_resource *surface_resource;
+    int32_t hotspot_x;
+    int32_t hotspot_y;
+  } pending_cursor;
+
+  struct wl_listener pending_cursor_surface_commit_listener;
+  struct wl_listener pending_cursor_surface_destroy_listener;
 };
 
 struct zwl_pointer *zwl_pointer_create(struct wl_client *client,
