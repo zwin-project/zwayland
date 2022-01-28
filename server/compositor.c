@@ -260,6 +260,20 @@ static void zwl_compositor_handle_keyboard_key(void *data, uint32_t serial,
   zwl_keyboard_send_key(keyboard, serial, time, key, state);
 }
 
+static void zwl_compositor_handle_keyboard_modifiers(
+    void *data, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched,
+    uint32_t mods_locked, uint32_t group)
+{
+  struct zwl_compositor *compositor = data;
+  struct zwl_seat *seat = compositor->compositor_global->seat;
+  struct zwl_keyboard *keyboard =
+      zwl_seat_get_keyboard(seat, wl_resource_get_client(compositor->resource));
+  if (keyboard == NULL) return;
+
+  zwl_keyboard_send_modifiers(keyboard, serial, mods_depressed, mods_latched,
+                              mods_locked, group);
+}
+
 static const struct zsurf_display_interface surface_display_interface = {
     .seat_capabilities = zwl_compositor_handle_seat_capabilities,
     .pointer_enter = zwl_compositor_handle_pointer_enter,
@@ -270,6 +284,7 @@ static const struct zsurf_display_interface surface_display_interface = {
     .keyboard_enter = zwl_compositor_handle_keyboard_enter,
     .keyboard_leave = zwl_compositor_handle_keyboard_leave,
     .keyboard_key = zwl_compositor_handle_keyboard_key,
+    .keyboard_modifiers = zwl_compositor_handle_keyboard_modifiers,
 };
 
 struct zwl_compositor *zwl_compositor_create(
