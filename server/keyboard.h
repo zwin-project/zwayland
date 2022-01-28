@@ -42,4 +42,8 @@ void zwl_keyboard_send_leave(struct zwl_keyboard *keyboard, uint32_t serial,
 void zwl_keyboard_send_key(struct zwl_keyboard *keyboard, uint32_t serial,
                            uint32_t time, uint32_t key, uint32_t state);
 
+void zwl_keyboard_send_modifiers(struct zwl_keyboard *keyboard, uint32_t serial,
+                                 uint32_t mods_depressed, uint32_t mods_latched,
+                                 uint32_t mods_locked, uint32_t group);
+
 #endif  //  ZWAYLAND_KEYBOARD_H

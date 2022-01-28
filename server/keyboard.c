@@ -63,6 +63,19 @@ void zwl_keyboard_send_key(struct zwl_keyboard *keyboard, uint32_t serial,
   }
 }
 
+void zwl_keyboard_send_modifiers(struct zwl_keyboard *keyboard, uint32_t serial,
+                                 uint32_t mods_depressed, uint32_t mods_latched,
+                                 uint32_t mods_locked, uint32_t group)
+{
+  struct wl_resource *resource;
+
+  wl_resource_for_each(resource, &keyboard->resource_list)
+  {
+    wl_keyboard_send_modifiers(resource, serial, mods_depressed, mods_latched,
+                               mods_locked, group);
+  }
+}
+
 static void zwl_keyboard_handle_destroy(struct wl_resource *resource)
 {
   wl_list_remove(wl_resource_get_link(resource));
