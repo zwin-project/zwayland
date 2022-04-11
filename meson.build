@@ -2,7 +2,7 @@ project(
   'zwayland',
   'c',
   version : '0.0.1',
-  license : 'Apache-2.0',
+  license : 'MIT',
   default_options : ['warning_level=3', 'werror=true', 'buildtype=debug'],
   meson_version : '>=0.57.0',
 )
